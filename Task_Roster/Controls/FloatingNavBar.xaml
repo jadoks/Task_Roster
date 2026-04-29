@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="Task_Roster.Controls.FloatingNavBar"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <Grid
+        x:Name="RootGrid"
+        HeightRequest="130"
+        Padding="24,0,24,24"
+        VerticalOptions="End">
+
+        <!-- Floating white container -->
+        <Border
+            x:Name="NavContainer"
+            HeightRequest="78"
+            BackgroundColor="White"
+            StrokeThickness="0"
+            VerticalOptions="End">
+
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="39" />
+            </Border.StrokeShape>
+
+            <Border.Shadow>
+                <Shadow
+                    Brush="Black"
+                    Offset="0,8"
+                    Radius="26"
+                    Opacity="0.16" />
+            </Border.Shadow>
+
+            <Grid
+                x:Name="IconGrid"
+                ColumnDefinitions="*,*,*,*"
+                Padding="18,8">
+
+                <!-- Home -->
+                <VerticalStackLayout
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    Spacing="2">
+
+                    <ImageButton
+                        x:Name="HomeButton"
+                        Source="home.svg"
+                        BackgroundColor="Transparent"
+                        WidthRequest="28"
+                        HeightRequest="28"
+                        Padding="4"
+                        Clicked="HomeClicked" />
+
+                    <Label
+                        x:Name="HomeLabel"
+                        Text="Home"
+                        FontSize="10"
+                        TextColor="#8A8A8A"
+                        HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- Schedule -->
+                <VerticalStackLayout
+                    Grid.Column="1"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    Spacing="2">
+
+                    <ImageButton
+                        x:Name="ScheduleButton"
+                        Source="schedule.svg"
+                        BackgroundColor="Transparent"
+                        WidthRequest="28"
+                        HeightRequest="28"
+                        Padding="4"
+                        Clicked="ScheduleClicked" />
+
+                    <Label
+                        x:Name="ScheduleLabel"
+                        Text="Schedule"
+                        FontSize="10"
+                        TextColor="#8A8A8A"
+                        HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- Team -->
+                <VerticalStackLayout
+                    Grid.Column="2"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    Spacing="2">
+
+                    <ImageButton
+                        x:Name="TeamButton"
+                        Source="team.svg"
+                        BackgroundColor="Transparent"
+                        WidthRequest="28"
+                        HeightRequest="28"
+                        Padding="4"
+                        Clicked="TeamClicked" />
+
+                    <Label
+                        x:Name="TeamLabel"
+                        Text="Team"
+                        FontSize="10"
+                        TextColor="#8A8A8A"
+                        HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- Settings -->
+                <VerticalStackLayout
+                    Grid.Column="3"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    Spacing="2">
+
+                    <ImageButton
+                        x:Name="SettingsButton"
+                        Source="settings.svg"
+                        BackgroundColor="Transparent"
+                        WidthRequest="28"
+                        HeightRequest="28"
+                        Padding="4"
+                        Clicked="SettingsClicked" />
+
+                    <Label
+                        x:Name="SettingsLabel"
+                        Text="Settings"
+                        FontSize="10"
+                        TextColor="#8A8A8A"
+                        HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+            </Grid>
+        </Border>
+
+        <!-- Active floating circle -->
+        <Border
+            x:Name="Indicator"
+            WidthRequest="62"
+            HeightRequest="62"
+            BackgroundColor="#8DFF2F"
+            StrokeThickness="0"
+            HorizontalOptions="Start"
+            VerticalOptions="Start"
+            TranslationY="-6">
+
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="31" />
+            </Border.StrokeShape>
+
+            <Border.Shadow>
+                <Shadow
+                    Brush="#8DFF2F"
+                    Offset="0,6"
+                    Radius="24"
+                    Opacity="0.75" />
+            </Border.Shadow>
+
+            <Image
+                x:Name="IndicatorIcon"
+                Source="home.svg"
+                WidthRequest="25"
+                HeightRequest="25"
+                HorizontalOptions="Center"
+                VerticalOptions="Center" />
+        </Border>
+
+    </Grid>
+</ContentView>

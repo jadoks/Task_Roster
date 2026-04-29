@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Task_Roster.Views.SignUpPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="White"
+    Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <Grid Padding="28" RowDefinitions="*,Auto,*">
+
+            <VerticalStackLayout
+                Grid.Row="1"
+                Spacing="14">
+
+                <Label
+                    Text="TaskRoster"
+                    FontSize="38"
+                    FontAttributes="Bold"
+                    TextColor="{StaticResource PrimaryGreen}" />
+
+                <Label
+                    Text="Create your&#10;Account"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    TextColor="{StaticResource PrimaryGreen}"
+                    Margin="0,6,0,4" />
+
+                <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="6" />
+                    </Border.StrokeShape>
+                    <Entry
+                        x:Name="EmailEntry"
+                        Placeholder="Email"
+                        Keyboard="Email"
+                        HeightRequest="42"
+                        FontSize="13"
+                        Margin="10,0" />
+                </Border>
+
+                <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="6" />
+                    </Border.StrokeShape>
+                    <Entry
+                        x:Name="FirstNameEntry"
+                        Placeholder="First Name"
+                        HeightRequest="42"
+                        FontSize="13"
+                        Margin="10,0" />
+                </Border>
+
+                <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="6" />
+                    </Border.StrokeShape>
+                    <Entry
+                        x:Name="LastNameEntry"
+                        Placeholder="Last Name"
+                        HeightRequest="42"
+                        FontSize="13"
+                        Margin="10,0" />
+                </Border>
+
+                <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="6" />
+                    </Border.StrokeShape>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Entry
+                            x:Name="PasswordEntry"
+                            Placeholder="Password"
+                            IsPassword="True"
+                            HeightRequest="42"
+                            FontSize="13"
+                            Margin="10,0" />
+
+                        <ImageButton
+                            Grid.Column="1"
+                            Source="eye.svg"
+                            BackgroundColor="Transparent"
+                            WidthRequest="36"
+                            HeightRequest="36"
+                            Clicked="OnTogglePasswordClicked" />
+                    </Grid>
+                </Border>
+
+                <Label
+                    Text="Select your Role"
+                    FontSize="11"
+                    TextColor="{StaticResource TextMuted}"
+                    HorizontalOptions="Center" />
+
+                <Grid ColumnDefinitions="*,12,*">
+                    <Button
+                        x:Name="ManagerButton"
+                        Text="Manager"
+                        FontSize="12"
+                        CornerRadius="7"
+                        BackgroundColor="#DCE5E0"
+                        TextColor="{StaticResource PrimaryGreen}"
+                        Clicked="OnManagerClicked" />
+
+                    <Button
+                        x:Name="EmployeeButton"
+                        Grid.Column="2"
+                        Text="Employee"
+                        FontSize="12"
+                        CornerRadius="7"
+                        BackgroundColor="#DCE5E0"
+                        TextColor="{StaticResource PrimaryGreen}"
+                        Clicked="OnEmployeeClicked" />
+                </Grid>
+
+                <Button
+                    Text="Register"
+                    HeightRequest="48"
+                    CornerRadius="7"
+                    BackgroundColor="{StaticResource PrimaryGreen}"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    Margin="0,8,0,0"
+                    Clicked="OnRegisterClicked" />
+
+                <HorizontalStackLayout
+                    Spacing="6"
+                    HorizontalOptions="Center"
+                    Margin="0,34,0,0">
+
+                    <Label
+                        Text="Already have an account?"
+                        FontSize="12"
+                        TextColor="Black" />
+
+                    <Label
+                        Text="Login"
+                        FontSize="12"
+                        FontAttributes="Bold"
+                        TextColor="{StaticResource PrimaryGreen}">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnLoginTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+
+                </HorizontalStackLayout>
+
+            </VerticalStackLayout>
+
+        </Grid>
+    </ScrollView>
+</ContentPage>

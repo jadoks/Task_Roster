@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Task_Roster.Views.SignInPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="White"
+    Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <Grid Padding="28" RowDefinitions="*,Auto,*">
+
+            <VerticalStackLayout
+                Grid.Row="1"
+                Spacing="16">
+
+                <Label
+                    Text="TaskRoster"
+                    FontSize="38"
+                    FontAttributes="Bold"
+                    TextColor="{StaticResource PrimaryGreen}" />
+
+                <Label
+                    Text="Login to your&#10;Account"
+                    FontSize="16"
+                    TextColor="{StaticResource PrimaryGreen}"
+                    FontAttributes="Bold"
+                    Margin="0,6,0,6" />
+
+                <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="6" />
+                    </Border.StrokeShape>
+                    <Entry
+                        x:Name="EmailEntry"
+                        Placeholder="Email"
+                        Keyboard="Email"
+                        FontSize="13"
+                        HeightRequest="42"
+                        Margin="10,0" />
+                </Border>
+
+                <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="6" />
+                    </Border.StrokeShape>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Entry
+                            x:Name="PasswordEntry"
+                            Placeholder="Password"
+                            IsPassword="True"
+                            FontSize="13"
+                            HeightRequest="42"
+                            Margin="10,0" />
+
+                        <ImageButton
+                            Grid.Column="1"
+                            Source="eye.svg"
+                            BackgroundColor="Transparent"
+                            WidthRequest="36"
+                            HeightRequest="36"
+                            Clicked="OnTogglePasswordClicked" />
+                    </Grid>
+                </Border>
+
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
+                    <CheckBox
+                        x:Name="RememberCheckBox"
+                        Color="{StaticResource PrimaryGreen}" />
+                    <Label
+                        Text="Remember me"
+                        FontSize="12"
+                        TextColor="{StaticResource TextDark}"
+                        VerticalOptions="Center" />
+                </HorizontalStackLayout>
+
+                <Button
+                    Text="Login"
+                    HeightRequest="48"
+                    CornerRadius="7"
+                    BackgroundColor="{StaticResource PrimaryGreen}"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    Clicked="OnLoginClicked" />
+
+                <Button
+                    Text="Forgot Password"
+                    BackgroundColor="Transparent"
+                    TextColor="{StaticResource PrimaryGreen}"
+                    FontSize="12"
+                    FontAttributes="Bold" />
+
+                <HorizontalStackLayout
+                    Spacing="6"
+                    HorizontalOptions="Center"
+                    Margin="0,36,0,0">
+
+                    <Label
+                        Text="Don't have an account?"
+                        FontSize="12"
+                        TextColor="Black" />
+
+                    <Label
+                        Text="Register"
+                        FontSize="12"
+                        FontAttributes="Bold"
+                        TextColor="{StaticResource PrimaryGreen}">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnRegisterTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+
+                </HorizontalStackLayout>
+
+            </VerticalStackLayout>
+
+        </Grid>
+    </ScrollView>
+</ContentPage>

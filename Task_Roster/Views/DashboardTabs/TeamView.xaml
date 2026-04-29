@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="Task_Roster.Views.DashboardTabs.TeamView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24,56,24,24" Spacing="20">
+
+            <Label
+                Text="Team"
+                FontSize="30"
+                FontAttributes="Bold"
+                TextColor="{StaticResource PrimaryGreen}" />
+
+            <Label
+                Text="View members and task availability."
+                FontSize="14"
+                TextColor="{StaticResource TextMuted}" />
+
+            <VerticalStackLayout Spacing="14">
+
+                <Border BackgroundColor="White" Padding="18" StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="18" />
+                    </Border.StrokeShape>
+
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource PrimaryGreen}" StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="22" />
+                            </Border.StrokeShape>
+                            <Label Text="A" TextColor="White" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+
+                        <VerticalStackLayout Grid.Column="1" Margin="14,0">
+                            <Label Text="Alex Santos" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextDark}" />
+                            <Label Text="Manager" FontSize="12" TextColor="{StaticResource TextMuted}" />
+                        </VerticalStackLayout>
+
+                        <Label Grid.Column="2" Text="Active" TextColor="{StaticResource PrimaryGreen}" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Border BackgroundColor="White" Padding="18" StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="18" />
+                    </Border.StrokeShape>
+
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource PrimaryGreen}" StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="22" />
+                            </Border.StrokeShape>
+                            <Label Text="M" TextColor="White" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+
+                        <VerticalStackLayout Grid.Column="1" Margin="14,0">
+                            <Label Text="Mika Reyes" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextDark}" />
+                            <Label Text="Employee" FontSize="12" TextColor="{StaticResource TextMuted}" />
+                        </VerticalStackLayout>
+
+                        <Label Grid.Column="2" Text="Online" TextColor="{StaticResource PrimaryGreen}" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentView>

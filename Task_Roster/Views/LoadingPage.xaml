@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Task_Roster.Views.LoadingPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="{StaticResource PageBackground}"
+    Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="*,Auto,*">
+
+        <VerticalStackLayout
+            Grid.Row="1"
+            Spacing="18"
+            HorizontalOptions="Center"
+            VerticalOptions="Center">
+
+            <Border
+                WidthRequest="68"
+                HeightRequest="68"
+                BackgroundColor="White"
+                StrokeThickness="0">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="34" />
+                </Border.StrokeShape>
+
+                <Image
+                    Source="schedule.svg"
+                    WidthRequest="34"
+                    HeightRequest="34"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center" />
+            </Border>
+
+            <Label
+                Text="TaskRoster"
+                FontSize="24"
+                FontAttributes="Bold"
+                TextColor="{StaticResource PrimaryGreen}"
+                HorizontalOptions="Center" />
+
+            <BoxView
+                x:Name="LoadingLine"
+                WidthRequest="40"
+                HeightRequest="4"
+                CornerRadius="2"
+                Color="{StaticResource PrimaryGreen}"
+                HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+
+    </Grid>
+</ContentPage>
