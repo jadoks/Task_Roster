@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.Controls.Shapes;
+using Task_Roster.Views;
 
 namespace Task_Roster.Views.DashboardTabs;
 
@@ -51,7 +52,7 @@ public partial class SettingsView : ContentView
         ModalOverlay.IsVisible = true;
     }
 
-    private void OnCloseModalClicked(object sender, EventArgs e)
+    private void OnCloseModalClicked(object? sender, EventArgs e)
     {
         ModalOverlay.IsVisible = false;
     }
@@ -345,10 +346,12 @@ public partial class SettingsView : ContentView
     {
         bool confirm = await ShowConfirm("Log Out", "Are you sure you want to log out?");
 
-        if (confirm)
-        {
-            await ShowAlert("Logged Out", "You have been logged out.");
-        }
+        if (!confirm)
+            return;
+
+        Preferences.Set("IsLoggedIn", false);
+
+        Application.Current!.Windows[0].Page = new NavigationPage(new SignInPage());
     }
 
     private Label SectionTitle(string text)

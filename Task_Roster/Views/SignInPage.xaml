@@ -4,116 +4,341 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     BackgroundColor="White"
+    NavigationPage.HasNavigationBar="False"
     Shell.NavBarIsVisible="False">
 
-    <ScrollView>
-        <Grid Padding="28" RowDefinitions="*,Auto,*">
+    <Grid>
 
-            <VerticalStackLayout
-                Grid.Row="1"
-                Spacing="16">
+        <ScrollView>
+            <Grid Padding="28" RowDefinitions="*,Auto,*">
 
-                <Label
-                    Text="TaskRoster"
-                    FontSize="38"
-                    FontAttributes="Bold"
-                    TextColor="{StaticResource PrimaryGreen}" />
+                <VerticalStackLayout Grid.Row="1" Spacing="20">
 
-                <Label
-                    Text="Login to your&#10;Account"
-                    FontSize="16"
-                    TextColor="{StaticResource PrimaryGreen}"
-                    FontAttributes="Bold"
-                    Margin="0,6,0,6" />
+                    <Label
+                        Text="TaskRoster"
+                        FontSize="54"
+                        FontAttributes="Bold"
+                        TextColor="{StaticResource PrimaryGreen}"
+                        HorizontalOptions="Center"
+                        Margin="0,0,0,18" />
 
-                <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="6" />
-                    </Border.StrokeShape>
-                    <Entry
-                        x:Name="EmailEntry"
-                        Placeholder="Email"
-                        Keyboard="Email"
-                        FontSize="13"
-                        HeightRequest="42"
-                        Margin="10,0" />
-                </Border>
+                    <Label
+                        Text="Login to your Account"
+                        FontSize="19"
+                        FontAttributes="Bold"
+                        TextColor="{StaticResource PrimaryGreen}"
+                        HorizontalOptions="Center"
+                        Margin="0,0,0,18" />
 
-                <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="6" />
-                    </Border.StrokeShape>
+                    <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="6" />
+                        </Border.StrokeShape>
+
+                        <Entry
+                            x:Name="EmailEntry"
+                            Placeholder="Email"
+                            Keyboard="Email"
+                            HeightRequest="36"
+                            FontSize="12"
+                            Margin="10,0" />
+                    </Border>
+
+                    <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="6" />
+                        </Border.StrokeShape>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Entry
+                                x:Name="PasswordEntry"
+                                Placeholder="Password"
+                                IsPassword="True"
+                                HeightRequest="36"
+                                FontSize="12"
+                                Margin="10,0" />
+
+                            <ImageButton
+                                x:Name="PasswordToggleButton"
+                                Grid.Column="1"
+                                Source="eyeslash.svg"
+                                BackgroundColor="Transparent"
+                                WidthRequest="36"
+                                HeightRequest="36"
+                                Padding="8"
+                                Clicked="OnTogglePasswordClicked" />
+                        </Grid>
+                    </Border>
+
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <HorizontalStackLayout Spacing="6">
+                            <CheckBox
+                                x:Name="RememberCheckBox"
+                                Color="{StaticResource PrimaryGreen}" />
+
+                            <Label
+                                Text="Remember me"
+                                FontSize="12"
+                                TextColor="{StaticResource TextDark}"
+                                VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+
+                        <Label
+                            Grid.Column="2"
+                            Text="Forgot Password"
+                            FontSize="12"
+                            FontAttributes="Bold"
+                            TextColor="{StaticResource PrimaryGreen}"
+                            VerticalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnForgotPasswordTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Grid>
+
+                    <Button
+                        Text="Login"
+                        HeightRequest="48"
+                        CornerRadius="7"
+                        BackgroundColor="{StaticResource PrimaryGreen}"
+                        TextColor="White"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        Clicked="OnLoginClicked" />
+
+                    <Button
+                        Text="Register"
+                        HeightRequest="48"
+                        CornerRadius="7"
+                        BackgroundColor="White"
+                        TextColor="{StaticResource PrimaryGreen}"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        BorderColor="{StaticResource PrimaryGreen}"
+                        BorderWidth="1"
+                        Clicked="OnRegisterClicked" />
+
+                    <Label
+                        Text="Demo Accounts&#10;Manager: manager@demo.com / 123456&#10;Employee: employee@demo.com / 123456"
+                        FontSize="11"
+                        TextColor="#6B7280"
+                        HorizontalTextAlignment="Center"
+                        Margin="0,8,0,0" />
+
+                </VerticalStackLayout>
+            </Grid>
+        </ScrollView>
+
+        <!-- FORGOT PASSWORD MODAL -->
+        <Grid
+            x:Name="ForgotPasswordOverlay"
+            IsVisible="False"
+            BackgroundColor="#99000000"
+            Padding="24">
+
+            <Border
+                BackgroundColor="White"
+                StrokeThickness="0"
+                Padding="22"
+                VerticalOptions="Center">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="18">
 
                     <Grid ColumnDefinitions="*,Auto">
-                        <Entry
-                            x:Name="PasswordEntry"
-                            Placeholder="Password"
-                            IsPassword="True"
-                            FontSize="13"
-                            HeightRequest="42"
-                            Margin="10,0" />
+                        <Label
+                            x:Name="ForgotModalTitle"
+                            Text="Forgot Password"
+                            FontSize="20"
+                            FontAttributes="Bold"
+                            TextColor="{StaticResource PrimaryGreen}" />
 
-                        <ImageButton
+                        <Button
                             Grid.Column="1"
-                            Source="eye.svg"
+                            Text="×"
+                            FontSize="22"
                             BackgroundColor="Transparent"
-                            WidthRequest="36"
-                            HeightRequest="36"
-                            Clicked="OnTogglePasswordClicked" />
+                            TextColor="#6B7280"
+                            Padding="0"
+                            WidthRequest="32"
+                            HeightRequest="32"
+                            Clicked="OnCloseForgotPasswordClicked" />
                     </Grid>
-                </Border>
 
-                <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
-                    <CheckBox
-                        x:Name="RememberCheckBox"
-                        Color="{StaticResource PrimaryGreen}" />
-                    <Label
-                        Text="Remember me"
-                        FontSize="12"
-                        TextColor="{StaticResource TextDark}"
-                        VerticalOptions="Center" />
-                </HorizontalStackLayout>
+                    <VerticalStackLayout
+                        x:Name="ForgotEmailStep"
+                        Spacing="14">
 
-                <Button
-                    Text="Login"
-                    HeightRequest="48"
-                    CornerRadius="7"
-                    BackgroundColor="{StaticResource PrimaryGreen}"
-                    TextColor="White"
-                    FontAttributes="Bold"
-                    Clicked="OnLoginClicked" />
+                        <Label
+                            Text="Enter your email address to receive your verification PIN."
+                            FontSize="13"
+                            TextColor="#6B7280" />
 
-                <Button
-                    Text="Forgot Password"
-                    BackgroundColor="Transparent"
-                    TextColor="{StaticResource PrimaryGreen}"
-                    FontSize="12"
-                    FontAttributes="Bold" />
+                        <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="6" />
+                            </Border.StrokeShape>
 
-                <HorizontalStackLayout
-                    Spacing="6"
-                    HorizontalOptions="Center"
-                    Margin="0,36,0,0">
+                            <Entry
+                                x:Name="ResetEmailEntry"
+                                Placeholder="Enter your email"
+                                Keyboard="Email"
+                                FontSize="13"
+                                HeightRequest="42"
+                                Margin="10,0" />
+                        </Border>
 
-                    <Label
-                        Text="Don't have an account?"
-                        FontSize="12"
-                        TextColor="Black" />
+                        <Button
+                            Text="Proceed"
+                            HeightRequest="48"
+                            CornerRadius="7"
+                            BackgroundColor="{StaticResource PrimaryGreen}"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            Clicked="OnProceedEmailClicked" />
+                    </VerticalStackLayout>
 
-                    <Label
-                        Text="Register"
-                        FontSize="12"
+                    <VerticalStackLayout
+                        x:Name="ForgotPinStep"
+                        IsVisible="False"
+                        Spacing="14">
+
+                        <Label
+                            Text="Enter the 4-digit verification PIN sent to your email."
+                            FontSize="13"
+                            TextColor="#6B7280" />
+
+                        <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+
+                            <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1" WidthRequest="45" HeightRequest="45">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="8" />
+                                </Border.StrokeShape>
+                                <Entry x:Name="Pin1Entry" Keyboard="Numeric" MaxLength="1" FontSize="18" HorizontalTextAlignment="Center" />
+                            </Border>
+
+                            <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1" WidthRequest="45" HeightRequest="45">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="8" />
+                                </Border.StrokeShape>
+                                <Entry x:Name="Pin2Entry" Keyboard="Numeric" MaxLength="1" FontSize="18" HorizontalTextAlignment="Center" />
+                            </Border>
+
+                            <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1" WidthRequest="45" HeightRequest="45">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="8" />
+                                </Border.StrokeShape>
+                                <Entry x:Name="Pin3Entry" Keyboard="Numeric" MaxLength="1" FontSize="18" HorizontalTextAlignment="Center" />
+                            </Border>
+
+                            <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1" WidthRequest="45" HeightRequest="45">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="8" />
+                                </Border.StrokeShape>
+                                <Entry x:Name="Pin4Entry" Keyboard="Numeric" MaxLength="1" FontSize="18" HorizontalTextAlignment="Center" />
+                            </Border>
+
+                        </HorizontalStackLayout>
+
+                        <Button
+                            Text="Proceed"
+                            HeightRequest="48"
+                            CornerRadius="7"
+                            BackgroundColor="{StaticResource PrimaryGreen}"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            Clicked="OnProceedPinClicked" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout
+                        x:Name="ForgotNewPasswordStep"
+                        IsVisible="False"
+                        Spacing="14">
+
+                        <Label
+                            Text="Create and confirm your new password."
+                            FontSize="13"
+                            TextColor="#6B7280" />
+
+                        <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="6" />
+                            </Border.StrokeShape>
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Entry
+                                    x:Name="NewPasswordEntry"
+                                    Placeholder="New Password"
+                                    IsPassword="True"
+                                    FontSize="13"
+                                    HeightRequest="42"
+                                    Margin="10,0" />
+
+                                <ImageButton
+                                    x:Name="NewPasswordToggleButton"
+                                    Grid.Column="1"
+                                    Source="eyeslash.svg"
+                                    BackgroundColor="Transparent"
+                                    WidthRequest="36"
+                                    HeightRequest="36"
+                                    Padding="8"
+                                    Clicked="OnToggleNewPasswordClicked" />
+                            </Grid>
+                        </Border>
+
+                        <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="6" />
+                            </Border.StrokeShape>
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Entry
+                                    x:Name="ConfirmPasswordEntry"
+                                    Placeholder="Confirm Password"
+                                    IsPassword="True"
+                                    FontSize="13"
+                                    HeightRequest="42"
+                                    Margin="10,0" />
+
+                                <ImageButton
+                                    x:Name="ConfirmPasswordToggleButton"
+                                    Grid.Column="1"
+                                    Source="eyeslash.svg"
+                                    BackgroundColor="Transparent"
+                                    WidthRequest="36"
+                                    HeightRequest="36"
+                                    Padding="8"
+                                    Clicked="OnToggleConfirmPasswordClicked" />
+                            </Grid>
+                        </Border>
+
+                        <Button
+                            Text="Reset Password"
+                            HeightRequest="48"
+                            CornerRadius="7"
+                            BackgroundColor="{StaticResource PrimaryGreen}"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            Clicked="OnResetPasswordClicked" />
+                    </VerticalStackLayout>
+
+                    <Button
+                        Text="Back to Login"
+                        HeightRequest="44"
+                        CornerRadius="7"
+                        BackgroundColor="White"
+                        TextColor="{StaticResource PrimaryGreen}"
+                        BorderColor="{StaticResource PrimaryGreen}"
+                        BorderWidth="1"
                         FontAttributes="Bold"
-                        TextColor="{StaticResource PrimaryGreen}">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnRegisterTapped" />
-                        </Label.GestureRecognizers>
-                    </Label>
+                        Clicked="OnCloseForgotPasswordClicked" />
 
-                </HorizontalStackLayout>
-
-            </VerticalStackLayout>
-
+                </VerticalStackLayout>
+            </Border>
         </Grid>
-    </ScrollView>
+
+    </Grid>
 </ContentPage>

@@ -12,6 +12,10 @@ public partial class SignUpPage : ContentPage
     private void OnTogglePasswordClicked(object sender, EventArgs e)
     {
         PasswordEntry.IsPassword = !PasswordEntry.IsPassword;
+
+        PasswordToggleButton.Source = PasswordEntry.IsPassword
+            ? "eyeslash.svg"
+            : "eye.svg";
     }
 
     private void OnManagerClicked(object sender, EventArgs e)
@@ -50,13 +54,17 @@ public partial class SignUpPage : ContentPage
 
         Preferences.Set("IsLoggedIn", true);
         Preferences.Set("UserRole", _selectedRole);
-        Preferences.Set("UserName", FirstNameEntry.Text);
+        Preferences.Set("UserName", FirstNameEntry.Text.Trim());
+
+        Application.Current!.Windows[0].Page = new AppShell();
+
+        await Task.Delay(100);
 
         await Shell.Current.GoToAsync(nameof(DashboardPage));
     }
 
-    private async void OnLoginTapped(object sender, TappedEventArgs e)
+    private async void OnLoginClicked(object sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync(nameof(SignInPage));
+        await Navigation.PopAsync();
     }
 }
