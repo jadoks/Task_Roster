@@ -2,70 +2,418 @@
 <ContentView
     x:Class="Task_Roster.Views.DashboardTabs.TeamView"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="#F5F6F8">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="24,56,24,24" Spacing="20">
+    <Grid>
 
-            <Label
-                Text="Team"
-                FontSize="30"
-                FontAttributes="Bold"
-                TextColor="{StaticResource PrimaryGreen}" />
+        <ScrollView>
+            <VerticalStackLayout Padding="16,18,16,24" Spacing="18">
 
-            <Label
-                Text="View members and task availability."
-                FontSize="14"
-                TextColor="{StaticResource TextMuted}" />
+                <Grid ColumnDefinitions="*,Auto" Padding="0,0,0,10">
+                    <Label Text="Employee Directory"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#1F2937"
+                           VerticalOptions="Center" />
 
-            <VerticalStackLayout Spacing="14">
+                    <Image Grid.Column="1"
+                           Source="bell.svg"
+                           WidthRequest="22"
+                           HeightRequest="22"
+                           VerticalOptions="Center" />
+                </Grid>
 
-                <Border BackgroundColor="White" Padding="18" StrokeThickness="0">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="18" />
-                    </Border.StrokeShape>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <SearchBar x:Name="SearchEmployeeBar"
+                               Placeholder="Search employees..."
+                               FontSize="12"
+                               BackgroundColor="White"
+                               TextChanged="OnSearchTextChanged" />
 
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-                        <Border WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource PrimaryGreen}" StrokeThickness="0">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="22" />
-                            </Border.StrokeShape>
-                            <Label Text="A" TextColor="White" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
-                        </Border>
+                    <ImageButton
+                        Grid.Column="1"
+                        Source="personplus.svg"
+                        BackgroundColor="#16A34A"
+                        WidthRequest="42"
+                        HeightRequest="42"
+                        CornerRadius="6"
+                        Padding="10"
+                
+                        Clicked="OnAddEmployeeClicked" />
+                </Grid>
 
-                        <VerticalStackLayout Grid.Column="1" Margin="14,0">
-                            <Label Text="Alex Santos" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextDark}" />
-                            <Label Text="Manager" FontSize="12" TextColor="{StaticResource TextMuted}" />
-                        </VerticalStackLayout>
+                <Label x:Name="TeamCountLabel"
+                       Text="Team Members ( 3 )"
+                       FontSize="13"
+                       FontAttributes="Bold"
+                       TextColor="#1F2937" />
 
-                        <Label Grid.Column="2" Text="Active" TextColor="{StaticResource PrimaryGreen}" FontAttributes="Bold" VerticalOptions="Center" />
-                    </Grid>
-                </Border>
-
-                <Border BackgroundColor="White" Padding="18" StrokeThickness="0">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="18" />
-                    </Border.StrokeShape>
-
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-                        <Border WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource PrimaryGreen}" StrokeThickness="0">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="22" />
-                            </Border.StrokeShape>
-                            <Label Text="M" TextColor="White" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
-                        </Border>
-
-                        <VerticalStackLayout Grid.Column="1" Margin="14,0">
-                            <Label Text="Mika Reyes" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextDark}" />
-                            <Label Text="Employee" FontSize="12" TextColor="{StaticResource TextMuted}" />
-                        </VerticalStackLayout>
-
-                        <Label Grid.Column="2" Text="Online" TextColor="{StaticResource PrimaryGreen}" FontAttributes="Bold" VerticalOptions="Center" />
-                    </Grid>
-                </Border>
+                <VerticalStackLayout x:Name="TeamList" Spacing="10" />
 
             </VerticalStackLayout>
+        </ScrollView>
 
-        </VerticalStackLayout>
-    </ScrollView>
+        <!-- Add Employee Modal -->
+        <Grid x:Name="AddEmployeeOverlay"
+              IsVisible="False"
+              BackgroundColor="#99000000"
+              Padding="14">
+
+            <Border BackgroundColor="White"
+                    StrokeThickness="0"
+                    Padding="0"
+                    VerticalOptions="Center">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,*,Auto">
+
+                    <Grid Padding="18,16" ColumnDefinitions="*,Auto">
+                        <Label Text="Add New Employee"
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="#111827"
+                               VerticalOptions="Center" />
+
+                        <Button Grid.Column="1"
+                                Text="×"
+                                FontSize="20"
+                                Padding="0"
+                                WidthRequest="32"
+                                HeightRequest="32"
+                                BackgroundColor="Transparent"
+                                TextColor="#6B7280"
+                                Clicked="OnCloseAddEmployeeClicked" />
+                    </Grid>
+
+                    <ScrollView Grid.Row="1">
+                        <VerticalStackLayout Padding="18,8,18,18" Spacing="14">
+
+                            <Label Text="Full Name" FontSize="11" TextColor="#374151" />
+                            <Entry x:Name="NameEntry" FontSize="14" BackgroundColor="White" />
+
+                            <Label Text="Email Optional" FontSize="11" TextColor="#374151" />
+                            <Entry x:Name="EmailEntry"
+                                   Placeholder="Will be auto-generated if left blank"
+                                   FontSize="14"
+                                   Keyboard="Email"
+                                   BackgroundColor="White" />
+
+                            <Label Text="Skills" FontSize="11" TextColor="#374151" />
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Entry x:Name="SkillEntry"
+                                       Placeholder="Add skills..."
+                                       FontSize="14"
+                                       BackgroundColor="White" />
+
+                                <Button Grid.Column="1"
+                                        Text="+"
+                                        FontSize="20"
+                                        BackgroundColor="#16A34A"
+                                        TextColor="White"
+                                        WidthRequest="44"
+                                        CornerRadius="4"
+                                        Clicked="OnAddSkillClicked" />
+                            </Grid>
+
+                            <FlexLayout x:Name="SelectedSkillsLayout"
+                                        Wrap="Wrap"
+                                        Direction="Row" />
+
+                            <Label Text="Max Hours per Week" FontSize="11" TextColor="#374151" />
+                            <Entry x:Name="MaxHoursEntry"
+                                   Text="40"
+                                   FontSize="14"
+                                   Keyboard="Numeric"
+                                   BackgroundColor="White" />
+
+                            <Label Text="Availability" FontSize="11" TextColor="#374151" />
+
+                            <!-- Monday -->
+                            <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="12">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="6" />
+                                </Border.StrokeShape>
+
+                                <VerticalStackLayout Spacing="8">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <CheckBox x:Name="MondayCheckBox"
+                                                  IsChecked="True"
+                                                  CheckedChanged="OnDayCheckedChanged" />
+                                        <Label Text="Monday" FontSize="13" FontAttributes="Bold" TextColor="#111827" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <Grid x:Name="MondayTimeGrid" ColumnDefinitions="*,*" ColumnSpacing="10">
+                                        <VerticalStackLayout>
+                                            <Label Text="Start Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="MondayStartTimePicker" Time="09:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+
+                                        <VerticalStackLayout Grid.Column="1">
+                                            <Label Text="End Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="MondayEndTimePicker" Time="17:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- Tuesday -->
+                            <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="12">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="6" />
+                                </Border.StrokeShape>
+
+                                <VerticalStackLayout Spacing="8">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <CheckBox x:Name="TuesdayCheckBox" CheckedChanged="OnDayCheckedChanged" />
+                                        <Label Text="Tuesday" FontSize="13" FontAttributes="Bold" TextColor="#111827" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <Grid x:Name="TuesdayTimeGrid" IsVisible="False" ColumnDefinitions="*,*" ColumnSpacing="10">
+                                        <VerticalStackLayout>
+                                            <Label Text="Start Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="TuesdayStartTimePicker" Time="09:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+
+                                        <VerticalStackLayout Grid.Column="1">
+                                            <Label Text="End Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="TuesdayEndTimePicker" Time="17:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- Wednesday -->
+                            <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="12">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="6" />
+                                </Border.StrokeShape>
+
+                                <VerticalStackLayout Spacing="8">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <CheckBox x:Name="WednesdayCheckBox" CheckedChanged="OnDayCheckedChanged" />
+                                        <Label Text="Wednesday" FontSize="13" FontAttributes="Bold" TextColor="#111827" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <Grid x:Name="WednesdayTimeGrid" IsVisible="False" ColumnDefinitions="*,*" ColumnSpacing="10">
+                                        <VerticalStackLayout>
+                                            <Label Text="Start Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="WednesdayStartTimePicker" Time="09:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+
+                                        <VerticalStackLayout Grid.Column="1">
+                                            <Label Text="End Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="WednesdayEndTimePicker" Time="17:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- Thursday -->
+                            <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="12">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="6" />
+                                </Border.StrokeShape>
+
+                                <VerticalStackLayout Spacing="8">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <CheckBox x:Name="ThursdayCheckBox" CheckedChanged="OnDayCheckedChanged" />
+                                        <Label Text="Thursday" FontSize="13" FontAttributes="Bold" TextColor="#111827" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <Grid x:Name="ThursdayTimeGrid" IsVisible="False" ColumnDefinitions="*,*" ColumnSpacing="10">
+                                        <VerticalStackLayout>
+                                            <Label Text="Start Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="ThursdayStartTimePicker" Time="09:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+
+                                        <VerticalStackLayout Grid.Column="1">
+                                            <Label Text="End Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="ThursdayEndTimePicker" Time="17:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- Friday -->
+                            <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="12">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="6" />
+                                </Border.StrokeShape>
+
+                                <VerticalStackLayout Spacing="8">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <CheckBox x:Name="FridayCheckBox" CheckedChanged="OnDayCheckedChanged" />
+                                        <Label Text="Friday" FontSize="13" FontAttributes="Bold" TextColor="#111827" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <Grid x:Name="FridayTimeGrid" IsVisible="False" ColumnDefinitions="*,*" ColumnSpacing="10">
+                                        <VerticalStackLayout>
+                                            <Label Text="Start Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="FridayStartTimePicker" Time="09:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+
+                                        <VerticalStackLayout Grid.Column="1">
+                                            <Label Text="End Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="FridayEndTimePicker" Time="17:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- Saturday -->
+                            <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="12">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="6" />
+                                </Border.StrokeShape>
+
+                                <VerticalStackLayout Spacing="8">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <CheckBox x:Name="SaturdayCheckBox" CheckedChanged="OnDayCheckedChanged" />
+                                        <Label Text="Saturday" FontSize="13" FontAttributes="Bold" TextColor="#111827" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <Grid x:Name="SaturdayTimeGrid" IsVisible="False" ColumnDefinitions="*,*" ColumnSpacing="10">
+                                        <VerticalStackLayout>
+                                            <Label Text="Start Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="SaturdayStartTimePicker" Time="09:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+
+                                        <VerticalStackLayout Grid.Column="1">
+                                            <Label Text="End Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="SaturdayEndTimePicker" Time="17:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- Sunday -->
+                            <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="12">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="6" />
+                                </Border.StrokeShape>
+
+                                <VerticalStackLayout Spacing="8">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <CheckBox x:Name="SundayCheckBox" CheckedChanged="OnDayCheckedChanged" />
+                                        <Label Text="Sunday" FontSize="13" FontAttributes="Bold" TextColor="#111827" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <Grid x:Name="SundayTimeGrid" IsVisible="False" ColumnDefinitions="*,*" ColumnSpacing="10">
+                                        <VerticalStackLayout>
+                                            <Label Text="Start Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="SundayStartTimePicker" Time="09:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+
+                                        <VerticalStackLayout Grid.Column="1">
+                                            <Label Text="End Time" FontSize="10" TextColor="#6B7280" />
+                                            <TimePicker x:Name="SundayEndTimePicker" Time="17:00:00" FontSize="13" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12" Padding="18,14">
+                        <Button Text="Cancel"
+                                BackgroundColor="White"
+                                TextColor="#374151"
+                                BorderColor="#D1D5DB"
+                                BorderWidth="1"
+                                CornerRadius="6"
+                                Clicked="OnCloseAddEmployeeClicked" />
+
+                        <Button Grid.Column="1"
+                                Text="Add Employee"
+                                BackgroundColor="#16A34A"
+                                TextColor="White"
+                                CornerRadius="6"
+                                Clicked="OnContinueEmployeeClicked" />
+                    </Grid>
+
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Confirm Modal -->
+        <Grid x:Name="ConfirmEmployeeOverlay"
+              IsVisible="False"
+              BackgroundColor="#99000000"
+              Padding="20">
+
+            <Border BackgroundColor="White"
+                    Padding="16"
+                    StrokeThickness="0"
+                    VerticalOptions="Center">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="14">
+
+                    <Label Text="Confirm New Employee"
+                           FontSize="15"
+                           FontAttributes="Bold"
+                           TextColor="#111827" />
+
+                    <BoxView HeightRequest="1" Color="#E5E7EB" />
+
+                    <Border BackgroundColor="#DCFCE7" Stroke="#16A34A" Padding="12">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="6" />
+                        </Border.StrokeShape>
+
+                        <Label Text="Please review the employee details before adding"
+                               FontSize="12"
+                               TextColor="#166534"
+                               HorizontalTextAlignment="Center" />
+                    </Border>
+
+                    <Label Text="Employee Information" FontSize="11" TextColor="#374151" />
+
+                    <Border BackgroundColor="#F9FAFB" StrokeThickness="0" Padding="12">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="6" />
+                        </Border.StrokeShape>
+
+                        <VerticalStackLayout Spacing="4">
+                            <Label x:Name="ConfirmNameLabel" FontSize="14" FontAttributes="Bold" TextColor="#111827" />
+                            <Label x:Name="ConfirmEmailLabel" FontSize="11" TextColor="#6B7280" />
+                            <Label x:Name="ConfirmHoursLabel" FontSize="12" FontAttributes="Bold" TextColor="#111827" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Label Text="Skills" FontSize="11" TextColor="#374151" />
+                    <FlexLayout x:Name="ConfirmSkillsLayout" Wrap="Wrap" Direction="Row" />
+
+                    <Label Text="Availability" FontSize="11" TextColor="#374151" />
+                    <Label x:Name="ConfirmAvailabilityLabel" FontSize="12" TextColor="#374151" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Text="Back to Edit"
+                                BackgroundColor="White"
+                                TextColor="#374151"
+                                BorderColor="#E5E7EB"
+                                BorderWidth="1"
+                                Clicked="OnBackToEditClicked" />
+
+                        <Button Grid.Column="1"
+                                Text="Confirm &amp; Add"
+                                BackgroundColor="#16A34A"
+                                TextColor="White"
+                                Clicked="OnConfirmAddEmployeeClicked" />
+                    </Grid>
+
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+    </Grid>
 </ContentView>

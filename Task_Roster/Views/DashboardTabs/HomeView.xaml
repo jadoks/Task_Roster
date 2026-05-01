@@ -2,129 +2,233 @@
 <ContentView
     x:Class="Task_Roster.Views.DashboardTabs.HomeView"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit">
+    
 
-    <ScrollView>
-        <VerticalStackLayout Padding="24,56,24,24" Spacing="22">
+    <ScrollView BackgroundColor="#F5F6F8">
+        <VerticalStackLayout Padding="16,18,16,24" Spacing="20">
 
+            <!-- Header -->
+            <Grid ColumnDefinitions="*,Auto" Padding="0,0,0,10">
+                <Label
+                    Text="Manager Dashboard"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    TextColor="#1F2937"
+                    VerticalOptions="Center" />
+
+                <Image
+                    Grid.Column="1"
+                    Source="bell.svg"
+                    WidthRequest="22"
+                    HeightRequest="22"
+                    VerticalOptions="Center" />
+            </Grid>
+
+            <!-- Date Row -->
             <Grid ColumnDefinitions="*,Auto">
-                <VerticalStackLayout Spacing="3">
-                    <Label
-                        Text="Welcome back,"
-                        FontSize="14"
-                        TextColor="{StaticResource TextMuted}" />
-
-                    <Label
-                        Text="TaskRoster"
-                        FontSize="30"
-                        FontAttributes="Bold"
-                        TextColor="{StaticResource PrimaryGreen}" />
-                </VerticalStackLayout>
+                <Label
+                    Text="Tue, Sep 16"
+                    FontSize="15"
+                    FontAttributes="Bold"
+                    TextColor="#1F2937"
+                    VerticalOptions="Center" />
 
                 <Border
                     Grid.Column="1"
-                    WidthRequest="48"
-                    HeightRequest="48"
-                    BackgroundColor="{StaticResource PrimaryGreen}"
-                    StrokeThickness="0">
+                    BackgroundColor="#DBEAFE"
+                    StrokeThickness="0"
+                    Padding="12,6">
 
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="24" />
+                        <RoundRectangle CornerRadius="14" />
                     </Border.StrokeShape>
 
-                    <Image
-                        Source="team.svg"
-                        WidthRequest="24"
-                        HeightRequest="24"
-                        HorizontalOptions="Center"
-                        VerticalOptions="Center" />
+                    <Label
+                        Text="Today"
+                        FontSize="11"
+                        TextColor="#2563EB" />
                 </Border>
             </Grid>
 
-            <Border
-                BackgroundColor="{StaticResource PrimaryGreen}"
-                StrokeThickness="0"
-                Padding="22">
+            <!-- Stats Cards -->
+            <Grid
+                ColumnDefinitions="*,*"
+                RowDefinitions="Auto,Auto"
+                ColumnSpacing="12"
+                RowSpacing="12">
 
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="24" />
-                </Border.StrokeShape>
+                <Border BackgroundColor="White" Padding="14" Stroke="#E5E7EB">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
 
-                <VerticalStackLayout Spacing="12">
-                    <Label
-                        Text="Today Overview"
-                        FontSize="18"
-                        FontAttributes="Bold"
-                        TextColor="White" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Border
+                            WidthRequest="34"
+                            HeightRequest="34"
+                            BackgroundColor="#DBEAFE"
+                            StrokeThickness="0"
+                            VerticalOptions="Center">
 
-                    <Label
-                        Text="Track your team, schedules, and daily task progress in one professional dashboard."
-                        FontSize="14"
-                        TextColor="#DDEEE6" />
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="17" />
+                            </Border.StrokeShape>
 
-                    <Grid ColumnDefinitions="*,*">
-                        <VerticalStackLayout>
-                            <Label Text="12" FontSize="32" FontAttributes="Bold" TextColor="White" />
-                            <Label Text="Tasks" FontSize="12" TextColor="#DDEEE6" />
-                        </VerticalStackLayout>
+                            <Image Source="schedule.svg" WidthRequest="18" HeightRequest="18" />
+                            
+                        </Border>
 
-                        <VerticalStackLayout Grid.Column="1">
-                            <Label Text="8" FontSize="32" FontAttributes="Bold" TextColor="White" />
-                            <Label Text="Completed" FontSize="12" TextColor="#DDEEE6" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Pending Shifts" FontSize="11" TextColor="#6B7280" />
+                            <Label Text="2" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
                         </VerticalStackLayout>
                     </Grid>
-                </VerticalStackLayout>
-            </Border>
-
-            <Label
-                Text="Quick Actions"
-                FontSize="18"
-                FontAttributes="Bold"
-                TextColor="{StaticResource TextDark}" />
-
-            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="14">
-
-                <Border BackgroundColor="White" Padding="18" StrokeThickness="0">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="18" />
-                    </Border.StrokeShape>
-                    <VerticalStackLayout Spacing="10">
-                        <Image Source="schedule.svg" WidthRequest="28" HeightRequest="28" />
-                        <Label Text="Schedule" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextDark}" />
-                    </VerticalStackLayout>
                 </Border>
 
-                <Border Grid.Column="1" BackgroundColor="White" Padding="18" StrokeThickness="0">
+                <Border Grid.Column="1" BackgroundColor="White" Padding="14" Stroke="#E5E7EB">
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="18" />
+                        <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
-                    <VerticalStackLayout Spacing="10">
-                        <Image Source="team.svg" WidthRequest="28" HeightRequest="28" />
-                        <Label Text="Team" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextDark}" />
-                    </VerticalStackLayout>
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Border
+                            WidthRequest="34"
+                            HeightRequest="34"
+                            BackgroundColor="#FEF3C7"
+                            StrokeThickness="0"
+                            VerticalOptions="Center">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="17" />
+                            </Border.StrokeShape>
+
+                            <Image Source="exclamation.svg" WidthRequest="18" HeightRequest="18" />
+                        </Border>
+
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Unassigned" FontSize="11" TextColor="#6B7280" />
+                            <Label Text="0" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
+                        </VerticalStackLayout>
+                    </Grid>
                 </Border>
 
-                <Border Grid.Row="1" BackgroundColor="White" Padding="18" StrokeThickness="0">
+                <Border Grid.Row="1" BackgroundColor="White" Padding="14" Stroke="#E5E7EB">
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="18" />
+                        <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
-                    <VerticalStackLayout Spacing="10">
-                        <Image Source="home.svg" WidthRequest="28" HeightRequest="28" />
-                        <Label Text="Tasks" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextDark}" />
-                    </VerticalStackLayout>
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Border
+                            WidthRequest="34"
+                            HeightRequest="34"
+                            BackgroundColor="#DCFCE7"
+                            StrokeThickness="0"
+                            VerticalOptions="Center">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="17" />
+                            </Border.StrokeShape>
+
+                            <Image Source="check.svg" WidthRequest="18" HeightRequest="18" />
+                        </Border>
+
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Tasks Done" FontSize="11" TextColor="#6B7280" />
+                            <Label Text="0/5" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
+                        </VerticalStackLayout>
+                    </Grid>
                 </Border>
 
-                <Border Grid.Row="1" Grid.Column="1" BackgroundColor="White" Padding="18" StrokeThickness="0">
+                <Border Grid.Row="1" Grid.Column="1" BackgroundColor="White" Padding="14" Stroke="#E5E7EB">
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="18" />
+                        <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
-                    <VerticalStackLayout Spacing="10">
-                        <Image Source="settings.svg" WidthRequest="28" HeightRequest="28" />
-                        <Label Text="Settings" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource TextDark}" />
-                    </VerticalStackLayout>
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Border
+                            WidthRequest="34"
+                            HeightRequest="34"
+                            BackgroundColor="#F3E8FF"
+                            StrokeThickness="0"
+                            VerticalOptions="Center">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="17" />
+                            </Border.StrokeShape>
+
+                            <Image Source="clock.svg" WidthRequest="18" HeightRequest="18" />
+                        </Border>
+
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Staff Today" FontSize="11" TextColor="#6B7280" />
+                            <Label Text="0" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
+                        </VerticalStackLayout>
+                    </Grid>
                 </Border>
 
             </Grid>
+
+            <!-- Quick Actions -->
+            <Label
+                Text="Quick Actions"
+                FontSize="15"
+                FontAttributes="Bold"
+                TextColor="#1F2937" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Border BackgroundColor="White" Padding="14" Stroke="#E5E7EB">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Create Schedule" FontSize="13" FontAttributes="Bold" TextColor="#2563EB" />
+                        <Label Text="Add shifts for your team" FontSize="11" TextColor="#6B7280" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Column="1" BackgroundColor="White" Padding="14" Stroke="#E5E7EB">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Manage Team" FontSize="13" FontAttributes="Bold" TextColor="#2563EB" />
+                        <Label Text="Update skills &amp; availability" FontSize="11" TextColor="#6B7280" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <!-- Today's Schedule -->
+            <Label
+                Text="Today's Schedule"
+                FontSize="15"
+                FontAttributes="Bold"
+                TextColor="#1F2937" />
+
+            <Border BackgroundColor="White" Padding="20" Stroke="#E5E7EB">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="16" HorizontalOptions="Center">
+                    <Label
+                        Text="No shifts scheduled for today"
+                        FontSize="12"
+                        TextColor="#6B7280"
+                        HorizontalTextAlignment="Center" />
+
+                    <Button
+                        Text="Create Shifts"
+                        BackgroundColor="#2563EB"
+                        TextColor="White"
+                        FontSize="12"
+                        CornerRadius="6"
+                        Padding="18,8" />
+                </VerticalStackLayout>
+            </Border>
 
         </VerticalStackLayout>
     </ScrollView>
