@@ -479,14 +479,137 @@ public partial class ScheduleView : ContentView
         ShiftDetailsCard.IsVisible = true;
     }
 
-    private async void OnAddTaskClicked(
-        object sender,
-        EventArgs e)
+    private string _selectedPriority = "Medium";
+
+    private void OnAddTaskClicked(object sender, EventArgs e)
     {
-        await Application.Current.MainPage.DisplayAlert(
-            "Task",
-            "Add Task clicked.",
-            "OK");
+        // Clear fields before showing
+        TaskTitleEntry.Text = string.Empty;
+        TaskDescriptionEditor.Text = string.Empty;
+
+        // Reset priority to Medium by default
+        UpdatePriorityUI("Medium");
+
+        AddTaskOverlay.IsVisible = true;
+    }
+
+    private void OnCancelAddTaskClicked(object sender, EventArgs e)
+    {
+        AddTaskOverlay.IsVisible = false;
+    }
+    private string _selectedTaskPriority = "Medium";
+
+    private void OnPrioritySelectionClicked(object sender, EventArgs e)
+    {
+        if (sender is Button clickedButton)
+        {
+            _selectedTaskPriority = clickedButton.Text;
+
+            // Reset all buttons to the default "unselected" look
+            LowPriorityBtn.BackgroundColor = Color.FromArgb("#F3F4F6");
+            LowPriorityBtn.TextColor = Color.FromArgb("#374151");
+
+            MediumPriorityBtn.BackgroundColor = Color.FromArgb("#F3F4F6");
+            MediumPriorityBtn.TextColor = Color.FromArgb("#374151");
+
+            HighPriorityBtn.BackgroundColor = Color.FromArgb("#F3F4F6");
+            HighPriorityBtn.TextColor = Color.FromArgb("#374151");
+
+            // Apply "selected" colors based on which one was clicked
+            if (_selectedTaskPriority == "Low")
+            {
+                LowPriorityBtn.BackgroundColor = Color.FromArgb("#DBEAFE");
+                LowPriorityBtn.TextColor = Color.FromArgb("#1E40AF");
+            }
+            else if (_selectedTaskPriority == "Medium")
+            {
+                MediumPriorityBtn.BackgroundColor = Color.FromArgb("#FEF3C7");
+                MediumPriorityBtn.TextColor = Color.FromArgb("#CA8A04");
+            }
+            else if (_selectedTaskPriority == "High")
+            {
+                HighPriorityBtn.BackgroundColor = Color.FromArgb("#FEE2E2");
+                HighPriorityBtn.TextColor = Color.FromArgb("#991B1B");
+            }
+        }
+    }
+    private void UpdatePriorityUI(string priority)
+    {
+        _selectedPriority = priority;
+
+        // Reset all to default style
+        LowPriorityBtn.BackgroundColor = HighPriorityBtn.BackgroundColor = Color.FromArgb("#F9FAFB");
+        LowPriorityBtn.TextColor = HighPriorityBtn.TextColor = Color.FromArgb("#4B5563");
+        LowPriorityBtn.BorderWidth = HighPriorityBtn.BorderWidth = 0;
+
+        MediumPriorityBtn.BackgroundColor = Color.FromArgb("#F9FAFB");
+        MediumPriorityBtn.TextColor = Color.FromArgb("#4B5563");
+        MediumPriorityBtn.BorderWidth = 0;
+
+        // Apply "Selected" style based on choice
+        if (priority == "Low")
+        {
+            LowPriorityBtn.BackgroundColor = Color.FromArgb("#F3F4F6");
+            LowPriorityBtn.BorderColor = Color.FromArgb("#D1D5DB");
+            LowPriorityBtn.BorderWidth = 1;
+        }
+        else if (priority == "Medium")
+        {
+            MediumPriorityBtn.BackgroundColor = Color.FromArgb("#FEF9C3");
+            MediumPriorityBtn.TextColor = Color.FromArgb("#854D0E");
+            MediumPriorityBtn.BorderColor = Color.FromArgb("#FDE047");
+            MediumPriorityBtn.BorderWidth = 1;
+        }
+        else if (priority == "High")
+        {
+            HighPriorityBtn.BackgroundColor = Color.FromArgb("#FEE2E2");
+            HighPriorityBtn.TextColor = Color.FromArgb("#991B1B");
+            HighPriorityBtn.BorderColor = Color.FromArgb("#FCA5A5");
+            HighPriorityBtn.BorderWidth = 1;
+        }
+    }
+
+    // Update your existing Submit method to show the details screen
+    private async void OnSubmitTaskClicked(object sender, EventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(TaskTitleEntry.Text))
+        {
+            await Application.Current.MainPage.DisplayAlert("Error", "Task title is required", "OK");
+            return;
+        }
+
+        // 1. Fill the Task Details view with the data just entered
+        ViewTaskTitle.Text = TaskTitleEntry.Text;
+        ViewTaskDescription.Text = TaskDescriptionEditor.Text;
+        ViewTaskPriority.Text = $"{_selectedTaskPriority.ToLower()} priority";
+
+        // 2. Pull data from the currently selected shift (_selectedShift)
+        if (_selectedShift != null)
+        {
+            ViewTaskDue.Text = $"🕒 Due: {_selectedShift.Date:MMM d}, {FormatTime(_selectedShift.EndTime)}";
+            ViewAssignedStaff.Text = _selectedShift.Employee;
+            ViewShiftTime.Text = $"{_selectedShift.Date:ddd, MMM d} , {FormatTime(_selectedShift.StartTime)} - {FormatTime(_selectedShift.EndTime)}";
+            ViewLocation.Text = _selectedShift.Location;
+            ViewStatus.Text = _selectedShift.Status;
+        }
+
+        // 3. Close the Add Task Modal and open Task Details
+        AddTaskOverlay.IsVisible = false;
+        TaskDetailsOverlay.IsVisible = true;
+    }
+
+    // Handler for the Mark as Done button
+    private void OnMarkAsDoneClicked(object sender, EventArgs e)
+    {
+        // Close the details view and return to the main schedule interface
+        TaskDetailsOverlay.IsVisible = false;
+        ShiftDetailsCard.IsVisible = false; // Optional: hide the shift card too
+    }
+
+    // Back button handler
+    private void OnCloseTaskDetailsClicked(object sender, EventArgs e)
+    {
+        TaskDetailsOverlay.IsVisible = false;
     }
 
     private void OnTaskCheckedChanged(
@@ -520,7 +643,7 @@ public partial class ScheduleView : ContentView
     private async void OnDeclineClicked(
         object sender,
         EventArgs e)
-    {
+        { 
         if (_selectedShift == null)
             return;
 

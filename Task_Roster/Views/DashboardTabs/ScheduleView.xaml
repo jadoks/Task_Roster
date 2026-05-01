@@ -371,6 +371,185 @@
                 </VerticalStackLayout>
             </Border>
         </Grid>
+        <!-- Place this at the very bottom of your main Grid, after all other Borders/Grids -->
+        <Grid
+    x:Name="AddTaskOverlay"
+    IsVisible="False"
+    BackgroundColor="#99000000"
+    HorizontalOptions="Fill"
+    VerticalOptions="Fill">
 
+            <Border
+        BackgroundColor="White"
+        StrokeThickness="0"
+        VerticalOptions="Center"
+        HorizontalOptions="Center"
+        WidthRequest="350"
+        Padding="0">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="0">
+                    <!-- Header -->
+                    <Label 
+                Text="Add New Task" 
+                FontSize="18" 
+                FontAttributes="Bold" 
+                TextColor="#111827" 
+                Padding="20,18" />
+
+                    <BoxView HeightRequest="1" Color="#E5E7EB" />
+
+                    <VerticalStackLayout Padding="20" Spacing="16">
+                        <!-- Task Title -->
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Task Title" FontSize="12" FontAttributes="Bold" TextColor="#374151" />
+                            <Entry x:Name="TaskTitleEntry" Placeholder="Enter title" TextColor="#111827" />
+                        </VerticalStackLayout>
+
+                        <!-- Description -->
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Description" FontSize="12" FontAttributes="Bold" TextColor="#374151" />
+                            <Editor x:Name="TaskDescriptionEditor" HeightRequest="100" Placeholder="Enter description" />
+                        </VerticalStackLayout>
+
+                        <!-- Priority -->
+                        <!-- Priority Section inside AddTaskOverlay -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Priority" FontSize="12" FontAttributes="Bold" TextColor="#374151" />
+
+                            <!-- Use a Grid with * columns to force them to share the width equally -->
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" HorizontalOptions="Fill">
+                                <Button x:Name="LowPriorityBtn" 
+                                        Grid.Column="0"
+                                        Text="Low" 
+                                        Clicked="OnPrioritySelectionClicked" 
+                                        BackgroundColor="#F3F4F6" 
+                                        TextColor="#374151" 
+                                        HeightRequest="40"
+                                        Padding="0"
+                                        CornerRadius="6" />
+                                <Button x:Name="MediumPriorityBtn" 
+                                        Grid.Column="1"
+                                        Text="Medium" 
+                                        Clicked="OnPrioritySelectionClicked" 
+                                        BackgroundColor="#FEF3C7" 
+                                        TextColor="#CA8A04" 
+                                        HeightRequest="40"
+                                        Padding="0"
+                                        CornerRadius="6" />
+                                <Button x:Name="HighPriorityBtn" 
+                                        Grid.Column="2"
+                                        Text="High" 
+                                        Clicked="OnPrioritySelectionClicked" 
+                                        BackgroundColor="#F3F4F6" 
+                                        TextColor="#374151" 
+                                        HeightRequest="40"
+                                        Padding="0"
+                                        CornerRadius="6" />
+                            </Grid>
+                        </VerticalStackLayout>
+                        <!-- Footer Buttons -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,10,0,0">
+                            <Button
+                        Text="Cancel"
+                        BackgroundColor="White"
+                        TextColor="#374151"
+                        BorderColor="#E5E7EB"
+                        BorderWidth="1"
+                        CornerRadius="8"
+                        Clicked="OnCancelAddTaskClicked" />
+
+                            <Button
+                        Grid.Column="1"
+                        Text="Add Task"
+                        BackgroundColor="#16A34A"
+                        TextColor="White"
+                        CornerRadius="8"
+                        Clicked="OnSubmitTaskClicked" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+        <!-- Task Details Overlay -->
+        <Grid
+    x:Name="TaskDetailsOverlay"
+    IsVisible="False"
+    BackgroundColor="#F5F6F8"
+    Padding="16">
+
+            <VerticalStackLayout Spacing="20">
+                <!-- Custom Header -->
+                <Grid ColumnDefinitions="Auto, *, Auto" VerticalOptions="Start">
+                    <Button Text="←" BackgroundColor="Transparent" TextColor="#1F2937" FontSize="24" Clicked="OnCloseTaskDetailsClicked" />
+                    <Label Grid.Column="1" Text="Task Details" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Image Grid.Column="2" Source="bell.svg" WidthRequest="24" />
+                </Grid>
+
+                <!-- Main Task Card -->
+                <Border BackgroundColor="White" StrokeThickness="0" Padding="20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="12">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label x:Name="ViewTaskTitle" Text="Gwapo" FontSize="18" FontAttributes="Bold" />
+                            <Border Grid.Column="1" BackgroundColor="#FEF9C3" Padding="8,4">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12"/>
+                                </Border.StrokeShape>
+                                <Label x:Name="ViewTaskPriority" Text="medium priority" TextColor="#854D0E" FontSize="11" />
+                            </Border>
+                        </Grid>
+
+                        <Label x:Name="ViewTaskDue" Text="🕒 Due: Oct 24, 5:00 PM" TextColor="#6B7280" FontSize="13" />
+                        <BoxView HeightRequest="1" Color="#F3F4F6" Margin="0,5" />
+                        <Label x:Name="ViewTaskDescription" Text="pogi" TextColor="#374151" FontSize="14" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Shift Details Card -->
+                <Border BackgroundColor="White" StrokeThickness="0" Padding="20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="15">
+                        <Label Text="Details" FontSize="16" FontAttributes="Bold" />
+
+                        <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10">
+                            <Label Text="Assigned to:" TextColor="#6B7280" WidthRequest="100" />
+                            <HorizontalStackLayout Grid.Column="1" Spacing="8">
+                                <Label Text="👤" />
+                                <Label x:Name="ViewAssignedStaff" Text="John Smith" FontAttributes="Bold" />
+                            </HorizontalStackLayout>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10">
+                            <Label Text="Shift:" TextColor="#6B7280" WidthRequest="100" />
+                            <Label x:Name="ViewShiftTime" Grid.Column="1" Text="Fri, Oct 24, 09:00 - 17:00" FontAttributes="Bold" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10">
+                            <Label Text="Location:" TextColor="#6B7280" WidthRequest="100" />
+                            <Label x:Name="ViewLocation" Grid.Column="1" Text="Downtown Store" FontAttributes="Bold" HorizontalOptions="End" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10">
+                            <Label Text="Status:" TextColor="#6B7280" WidthRequest="100" />
+                            <Label x:Name="ViewStatus" Grid.Column="1" Text="Pending" TextColor="#CA8A04" FontAttributes="Bold" HorizontalOptions="End" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Footer Buttons -->
+                <Grid ColumnDefinitions="*, *" ColumnSpacing="15">
+                    <Button Text="✓ Mark Complete" BackgroundColor="#16A34A" TextColor="White" HeightRequest="50" CornerRadius="8" Clicked="OnMarkAsDoneClicked" />
+                    <Button Grid.Column="1" Text="✕ Cancel" BackgroundColor="#F3F4F6" TextColor="#4B5563" HeightRequest="50" CornerRadius="8" Clicked="OnCloseTaskDetailsClicked" />
+                </Grid>
+            </VerticalStackLayout>
+        </Grid>
     </Grid>
 </ContentView>

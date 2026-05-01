@@ -84,6 +84,9 @@
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Views\LoadingPage.xaml" Generator="MSBuild:Compile" />
+		<MauiXaml Update="Views\ShiftDetails.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Views\SignInPage.xaml" Generator="MSBuild:Compile" />
 		<MauiXaml Update="Views\SignUpPage.xaml" Generator="MSBuild:Compile" />
 	</ItemGroup>
