@@ -1,46 +1,35 @@
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Layouts;
+using Task_Roster.Models;
+using Task_Roster.Services;
 
 namespace Task_Roster.Views.DashboardTabs;
 
 public partial class TeamView : ContentView
 {
-    private readonly List<EmployeeModel> _employees = new();
+    private readonly DatabaseService _databaseService;
+
+    private List<EmployeeModel> _employees = new();
+
     private readonly List<string> _pendingSkills = new();
+
     private EmployeeModel? _pendingEmployee;
 
     public TeamView()
     {
         InitializeComponent();
 
-        _employees.Add(new EmployeeModel
-        {
-            Name = "John Smith",
-            Email = "john@example.com",
-            Skills = new List<string> { "cashier", "customer service" },
-            MaxHours = 24,
-            Availability = new List<string> { "W", "F" }
-        });
-
-        _employees.Add(new EmployeeModel
-        {
-            Name = "Sarah Miller",
-            Email = "sarah@example.com",
-            Skills = new List<string> { "barista", "food prep", "cashier" },
-            MaxHours = 32,
-            Availability = new List<string> { "T", "S" }
-        });
-
-        _employees.Add(new EmployeeModel
-        {
-            Name = "David Lee",
-            Email = "david@example.com",
-            Skills = new List<string> { "stock", "cashier" },
-            MaxHours = 40,
-            Availability = new List<string> { "M", "W", "F" }
-        });
+        _databaseService = new DatabaseService();
 
         UpdateDayTimeVisibility();
+
+        LoadEmployees();
+    }
+
+    private async void LoadEmployees()
+    {
+        _employees = await _databaseService.GetEmployeesAsync();
+
         RenderEmployees();
     }
 
@@ -65,9 +54,10 @@ public partial class TeamView : ContentView
         TeamList.Children.Clear();
 
         var filtered = _employees
-            .Where(e => string.IsNullOrWhiteSpace(filter)
-                     || e.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)
-                     || e.Email.Contains(filter, StringComparison.OrdinalIgnoreCase))
+            .Where(e =>
+                string.IsNullOrWhiteSpace(filter)
+                || e.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)
+                || e.Email.Contains(filter, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         TeamCountLabel.Text = $"Team Members ( {filtered.Count} )";
@@ -86,7 +76,7 @@ public partial class TeamView : ContentView
             Direction = FlexDirection.Row
         };
 
-        foreach (var skill in employee.Skills)
+        foreach (var skill in employee.Skills.Split(',', StringSplitOptions.RemoveEmptyEntries))
         {
             skillLayout.Children.Add(CreatePill(skill, "#BBF7D0", "#166534"));
         }
@@ -110,7 +100,7 @@ public partial class TeamView : ContentView
 
         for (int i = 0; i < days.Length; i++)
         {
-            bool active = employee.Availability.Any(a => a.StartsWith(days[i]));
+            bool active = employee.Availability.Contains(days[i]);
 
             var dayBox = new Border
             {
@@ -141,7 +131,8 @@ public partial class TeamView : ContentView
             {
                 Text = string.IsNullOrWhiteSpace(employee.Name)
                     ? "?"
-                    : employee.Name.Substring(0, 1).ToLower(),
+                    : employee.Name.Substring(0, 1).ToUpper(),
+
                 TextColor = Color.FromArgb("#166534"),
                 FontAttributes = FontAttributes.Bold,
                 HorizontalOptions = LayoutOptions.Center,
@@ -162,6 +153,7 @@ public partial class TeamView : ContentView
                     FontAttributes = FontAttributes.Bold,
                     TextColor = Color.FromArgb("#111827")
                 },
+
                 new Label
                 {
                     Text = employee.Email,
@@ -205,12 +197,37 @@ public partial class TeamView : ContentView
             Children =
             {
                 headerGrid,
-                new BoxView { HeightRequest = 1, Color = Color.FromArgb("#F3F4F6") },
-                new Label { Text = "Skills:", FontSize = 10, TextColor = Color.FromArgb("#6B7280") },
+
+                new BoxView
+                {
+                    HeightRequest = 1,
+                    Color = Color.FromArgb("#F3F4F6")
+                },
+
+                new Label
+                {
+                    Text = "Skills:",
+                    FontSize = 10,
+                    TextColor = Color.FromArgb("#6B7280")
+                },
+
                 skillLayout,
-                new BoxView { HeightRequest = 1, Color = Color.FromArgb("#F3F4F6") },
-                new Label { Text = "Availability:", FontSize = 10, TextColor = Color.FromArgb("#6B7280") },
+
+                new BoxView
+                {
+                    HeightRequest = 1,
+                    Color = Color.FromArgb("#F3F4F6")
+                },
+
+                new Label
+                {
+                    Text = "Availability:",
+                    FontSize = 10,
+                    TextColor = Color.FromArgb("#6B7280")
+                },
+
                 availabilityLayout,
+
                 new Label
                 {
                     Text = $"Max hours:   {employee.MaxHours}h/week",
@@ -236,10 +253,18 @@ public partial class TeamView : ContentView
         return new Border
         {
             BackgroundColor = Color.FromArgb(bg),
+
             StrokeThickness = 0,
+
             Padding = new Thickness(8, 4),
+
             Margin = new Thickness(0, 0, 5, 5),
-            StrokeShape = new RoundRectangle { CornerRadius = 10 },
+
+            StrokeShape = new RoundRectangle
+            {
+                CornerRadius = 10
+            },
+
             Content = new Label
             {
                 Text = text,
@@ -272,7 +297,9 @@ public partial class TeamView : ContentView
         string skill = SkillEntry.Text.Trim();
 
         _pendingSkills.Add(skill);
-        SelectedSkillsLayout.Children.Add(CreatePill(skill, "#BBF7D0", "#166534"));
+
+        SelectedSkillsLayout.Children.Add(
+            CreatePill(skill, "#BBF7D0", "#166534"));
 
         SkillEntry.Text = "";
     }
@@ -281,7 +308,9 @@ public partial class TeamView : ContentView
     {
         if (string.IsNullOrWhiteSpace(NameEntry.Text))
         {
-            await ShowAlert("Missing Name", "Please enter the employee name.");
+            await ShowAlert("Missing Name",
+                "Please enter the employee name.");
+
             return;
         }
 
@@ -296,45 +325,61 @@ public partial class TeamView : ContentView
         _pendingEmployee = new EmployeeModel
         {
             Name = name,
+
             Email = email,
-            Skills = _pendingSkills.ToList(),
+
+            Skills = string.Join(",", _pendingSkills),
+
             MaxHours = maxHours <= 0 ? 40 : maxHours,
-            Availability = GetSelectedDaysWithTimes()
+
+            Availability = string.Join("|", GetSelectedDaysWithTimes())
         };
 
         ConfirmNameLabel.Text = _pendingEmployee.Name;
+
         ConfirmEmailLabel.Text = _pendingEmployee.Email;
-        ConfirmHoursLabel.Text = $"Max Hours:   {_pendingEmployee.MaxHours}h/week";
+
+        ConfirmHoursLabel.Text =
+            $"Max Hours:   {_pendingEmployee.MaxHours}h/week";
 
         ConfirmSkillsLayout.Children.Clear();
 
-        foreach (var skill in _pendingEmployee.Skills)
+        foreach (var skill in _pendingEmployee.Skills
+                     .Split(',', StringSplitOptions.RemoveEmptyEntries))
         {
-            ConfirmSkillsLayout.Children.Add(CreatePill(skill, "#BBF7D0", "#166534"));
+            ConfirmSkillsLayout.Children.Add(
+                CreatePill(skill, "#BBF7D0", "#166534"));
         }
 
-        ConfirmAvailabilityLabel.Text = string.Join(Environment.NewLine, _pendingEmployee.Availability);
+        ConfirmAvailabilityLabel.Text =
+            string.Join(Environment.NewLine,
+            _pendingEmployee.Availability.Split('|'));
 
         AddEmployeeOverlay.IsVisible = false;
+
         ConfirmEmployeeOverlay.IsVisible = true;
     }
 
     private void OnBackToEditClicked(object sender, EventArgs e)
     {
         ConfirmEmployeeOverlay.IsVisible = false;
+
         AddEmployeeOverlay.IsVisible = true;
     }
 
-    private void OnConfirmAddEmployeeClicked(object sender, EventArgs e)
+    private async void OnConfirmAddEmployeeClicked(object sender, EventArgs e)
     {
         if (_pendingEmployee == null)
             return;
+
+        await _databaseService.AddEmployeeAsync(_pendingEmployee);
 
         _employees.Add(_pendingEmployee);
 
         ClearForm();
 
         ConfirmEmployeeOverlay.IsVisible = false;
+
         RenderEmployees(SearchEmployeeBar.Text ?? "");
     }
 
@@ -364,25 +409,35 @@ public partial class TeamView : ContentView
             days.Add($"Sunday: {FormatTime(SundayStartTimePicker.Time)} - {FormatTime(SundayEndTimePicker.Time)}");
 
         if (days.Count == 0)
-            days.Add($"Monday: {FormatTime(MondayStartTimePicker.Time)} - {FormatTime(MondayEndTimePicker.Time)}");
+        {
+            days.Add(
+                $"Monday: {FormatTime(MondayStartTimePicker.Time)} - {FormatTime(MondayEndTimePicker.Time)}");
+        }
 
         return days;
     }
 
     private string FormatTime(TimeSpan time)
     {
-        return DateTime.Today.Add(time).ToString("hh:mm tt");
+        return DateTime.Today
+            .Add(time)
+            .ToString("hh:mm tt");
     }
 
     private void ClearForm()
     {
         NameEntry.Text = "";
+
         EmailEntry.Text = "";
+
         SkillEntry.Text = "";
+
         MaxHoursEntry.Text = "40";
 
         _pendingSkills.Clear();
+
         SelectedSkillsLayout.Children.Clear();
+
         ConfirmSkillsLayout.Children.Clear();
 
         MondayCheckBox.IsChecked = true;
@@ -395,16 +450,22 @@ public partial class TeamView : ContentView
 
         MondayStartTimePicker.Time = new TimeSpan(9, 0, 0);
         MondayEndTimePicker.Time = new TimeSpan(17, 0, 0);
+
         TuesdayStartTimePicker.Time = new TimeSpan(9, 0, 0);
         TuesdayEndTimePicker.Time = new TimeSpan(17, 0, 0);
+
         WednesdayStartTimePicker.Time = new TimeSpan(9, 0, 0);
         WednesdayEndTimePicker.Time = new TimeSpan(17, 0, 0);
+
         ThursdayStartTimePicker.Time = new TimeSpan(9, 0, 0);
         ThursdayEndTimePicker.Time = new TimeSpan(17, 0, 0);
+
         FridayStartTimePicker.Time = new TimeSpan(9, 0, 0);
         FridayEndTimePicker.Time = new TimeSpan(17, 0, 0);
+
         SaturdayStartTimePicker.Time = new TimeSpan(9, 0, 0);
         SaturdayEndTimePicker.Time = new TimeSpan(17, 0, 0);
+
         SundayStartTimePicker.Time = new TimeSpan(9, 0, 0);
         SundayEndTimePicker.Time = new TimeSpan(17, 0, 0);
 
@@ -421,14 +482,5 @@ public partial class TeamView : ContentView
         {
             await page.DisplayAlert(title, message, "OK");
         }
-    }
-
-    private class EmployeeModel
-    {
-        public string Name { get; set; } = "";
-        public string Email { get; set; } = "";
-        public List<string> Skills { get; set; } = new();
-        public int MaxHours { get; set; }
-        public List<string> Availability { get; set; } = new();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+using Task_Roster.Services;
 
 namespace Task_Roster;
 
@@ -21,6 +22,8 @@ public static class MauiProgram
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
+        
+        builder.Services.AddSingleton<DatabaseService>();
 
         return builder.Build();
     }
