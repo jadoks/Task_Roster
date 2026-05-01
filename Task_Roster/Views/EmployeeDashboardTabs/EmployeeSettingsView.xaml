@@ -2,20 +2,452 @@
 <ContentView
     x:Class="Task_Roster.Views.EmployeeDashboardTabs.EmployeeSettingsView"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="#F5F6F8">
 
-    <VerticalStackLayout Padding="24,40,24,120" Spacing="18">
-        <Label
-            Text="Settings"
-            FontSize="24"
-            FontAttributes="Bold"
-            TextColor="#111827" />
+    <Grid>
 
-        <Button
-            Text="Logout"
-            BackgroundColor="#EF4444"
-            TextColor="White"
-            CornerRadius="8"
-            Clicked="OnLogoutClicked" />
-    </VerticalStackLayout>
+        <!-- MAIN SETTINGS PAGE -->
+        <ScrollView x:Name="SettingsMainView">
+            <VerticalStackLayout Padding="24,16,24,120" Spacing="24">
+
+                <!-- Header -->
+                <Grid ColumnDefinitions="*,Auto" Padding="0,0,0,6">
+                    <Label
+                        Text="Settings"
+                        FontSize="18"
+                        FontAttributes="Bold"
+                        TextColor="#1F2937"
+                        VerticalOptions="Center" />
+
+                    <Image
+                        Grid.Column="1"
+                        Source="bell.svg"
+                        WidthRequest="22"
+                        HeightRequest="22"
+                        VerticalOptions="Center" />
+                </Grid>
+
+                <!-- Profile Card -->
+                <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="18">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+                        <Border
+                            WidthRequest="64"
+                            HeightRequest="64"
+                            BackgroundColor="#E5E7EB"
+                            StrokeThickness="0">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="32" />
+                            </Border.StrokeShape>
+
+                            <Grid>
+                                <Image
+                                    x:Name="ProfileImage"
+                                    IsVisible="False"
+                                    Aspect="AspectFill" />
+
+                                <Label
+                                    x:Name="ProfileInitialsLabel"
+                                    Text="JS"
+                                    FontSize="22"
+                                    FontAttributes="Bold"
+                                    TextColor="#374151"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+
+                        <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                            <Label
+                                x:Name="ProfileNameLabel"
+                                Text="John Smith"
+                                FontSize="16"
+                                FontAttributes="Bold"
+                                TextColor="#111827" />
+
+                            <Label
+                                x:Name="ProfileEmailLabel"
+                                Text="john@example.com"
+                                FontSize="14"
+                                TextColor="#6B7280" />
+
+                            <HorizontalStackLayout Spacing="12">
+                                <Label Text="Employee" FontSize="13" TextColor="#16A34A" />
+                                <Label Text="Account" FontSize="13" TextColor="#16A34A" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <!-- Account -->
+                <Label Text="Account" FontSize="18" TextColor="#1F2937" />
+
+                <Border BackgroundColor="White" Stroke="#E5E7EB">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="0">
+
+                        <Grid Padding="18" ColumnDefinitions="Auto,*,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnEditProfileClicked" />
+                            </Grid.GestureRecognizers>
+
+                            <Border WidthRequest="36" HeightRequest="36" BackgroundColor="#DBEAFE" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="18" />
+                                </Border.StrokeShape>
+                                <Image Source="person.svg" WidthRequest="18" HeightRequest="18" />
+                            </Border>
+
+                            <Label
+                                Grid.Column="1"
+                                Text="Edit Profile"
+                                FontSize="15"
+                                TextColor="#111827"
+                                Margin="16,0"
+                                VerticalOptions="Center" />
+
+                            <Image
+                                Grid.Column="2"
+                                Source="chevronright.svg"
+                                WidthRequest="18"
+                                HeightRequest="18"
+                                VerticalOptions="Center" />
+                        </Grid>
+
+                        <BoxView HeightRequest="1" Color="#F3F4F6" />
+
+                        <Grid Padding="18" ColumnDefinitions="Auto,*,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnNotificationSettingsClicked" />
+                            </Grid.GestureRecognizers>
+
+                            <Border WidthRequest="36" HeightRequest="36" BackgroundColor="#F3E8FF" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="18" />
+                                </Border.StrokeShape>
+                                <Image Source="bell.svg" WidthRequest="18" HeightRequest="18" />
+                            </Border>
+
+                            <Label
+                                Grid.Column="1"
+                                Text="Notification Settings"
+                                FontSize="15"
+                                TextColor="#111827"
+                                Margin="16,0"
+                                VerticalOptions="Center" />
+
+                            <Image
+                                Grid.Column="2"
+                                Source="chevronright.svg"
+                                WidthRequest="18"
+                                HeightRequest="18"
+                                VerticalOptions="Center" />
+                        </Grid>
+
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Support -->
+                <Label Text="Support" FontSize="18" TextColor="#1F2937" />
+
+                <Border BackgroundColor="White" Stroke="#E5E7EB">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="0">
+
+                        <Grid Padding="18" ColumnDefinitions="Auto,*,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnHelpCenterClicked" />
+                            </Grid.GestureRecognizers>
+
+                            <Border WidthRequest="36" HeightRequest="36" BackgroundColor="#DBEAFE" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="18" />
+                                </Border.StrokeShape>
+                                <Image Source="questioncircle.svg" WidthRequest="18" HeightRequest="18" />
+                            </Border>
+
+                            <Label Grid.Column="1" Text="Help Center" FontSize="15" TextColor="#111827" Margin="16,0" VerticalOptions="Center" />
+                            <Image Grid.Column="2" Source="chevronright.svg" WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                        </Grid>
+
+                        <BoxView HeightRequest="1" Color="#F3F4F6" />
+
+                        <Grid Padding="18" ColumnDefinitions="Auto,*,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnContactSupportClicked" />
+                            </Grid.GestureRecognizers>
+
+                            <Border WidthRequest="36" HeightRequest="36" BackgroundColor="#DCFCE7" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="18" />
+                                </Border.StrokeShape>
+                                <Image Source="chatleft.svg" WidthRequest="18" HeightRequest="18" />
+                            </Border>
+
+                            <Label Grid.Column="1" Text="Contact Support" FontSize="15" TextColor="#111827" Margin="16,0" VerticalOptions="Center" />
+                            <Image Grid.Column="2" Source="chevronright.svg" WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                        </Grid>
+
+                        <BoxView HeightRequest="1" Color="#F3F4F6" />
+
+                        <Grid Padding="18" ColumnDefinitions="Auto,*,Auto">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnAboutClicked" />
+                            </Grid.GestureRecognizers>
+
+                            <Border WidthRequest="36" HeightRequest="36" BackgroundColor="#F3E8FF" StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="18" />
+                                </Border.StrokeShape>
+                                <Image Source="infocircle.svg" WidthRequest="18" HeightRequest="18" />
+                            </Border>
+
+                            <Label Grid.Column="1" Text="About TaskRoster" FontSize="15" TextColor="#111827" Margin="16,0" VerticalOptions="Center" />
+                            <Image Grid.Column="2" Source="chevronright.svg" WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                        </Grid>
+
+                    </VerticalStackLayout>
+                </Border>
+
+                <Button
+                    Text="  Log Out"
+                    ImageSource="boxarrowright.svg"
+                    ContentLayout="Left,12"
+                    BackgroundColor="#FEE2E2"
+                    TextColor="#DC2626"
+                    CornerRadius="6"
+                    HeightRequest="54"
+                    Clicked="OnLogoutClicked" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- EDIT PROFILE PAGE -->
+        <ScrollView x:Name="EditProfileView" IsVisible="False">
+            <VerticalStackLayout Padding="12,10,12,120" Spacing="26">
+
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Button
+                        Text="‹"
+                        FontSize="35"
+                        BackgroundColor="Transparent"
+                        TextColor="#374151"
+                        Padding="0,0,10,0"
+                        Margin="0,-5,0,0"
+                        Clicked="OnBackToSettingsClicked" />
+
+                    <Label
+                        Grid.Column="1"
+                        Text="Edit Profile"
+                        FontSize="18"
+                        FontAttributes="Bold"
+                        TextColor="#1F2937"
+                        VerticalOptions="Center" />
+
+                    <Image
+                        Grid.Column="2"
+                        Source="bell.svg"
+                        WidthRequest="22"
+                        HeightRequest="22"
+                        VerticalOptions="Center" />
+                </Grid>
+
+                <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="24">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="18">
+
+                        <Grid HorizontalOptions="Center">
+                            <Border
+                                WidthRequest="92"
+                                HeightRequest="92"
+                                BackgroundColor="#E5E7EB"
+                                Stroke="White"
+                                StrokeThickness="4">
+
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="46" />
+                                </Border.StrokeShape>
+
+                                <Grid>
+                                    <Image
+                                        x:Name="EditProfileImage"
+                                        IsVisible="False"
+                                        Aspect="AspectFill" />
+
+                                    <Label
+                                        x:Name="EditProfileInitialsLabel"
+                                        Text="JS"
+                                        FontSize="30"
+                                        FontAttributes="Bold"
+                                        TextColor="#374151"
+                                        HorizontalOptions="Center"
+                                        VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+
+                            <Border
+                                WidthRequest="34"
+                                HeightRequest="34"
+                                BackgroundColor="#165A3A"
+                                StrokeThickness="0"
+                                HorizontalOptions="End"
+                                VerticalOptions="End">
+
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnProfileCameraTapped" />
+                                </Border.GestureRecognizers>
+
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="17" />
+                                </Border.StrokeShape>
+
+                                <Image Source="camera.svg" WidthRequest="17" HeightRequest="17" />
+                            </Border>
+                        </Grid>
+
+                        <Label
+                            Text="Click the camera icon to upload a profile picture"
+                            FontSize="12"
+                            TextColor="#6B7280"
+                            HorizontalTextAlignment="Center" />
+
+                        <Label Text="Full Name" FontSize="13" FontAttributes="Bold" TextColor="#374151" />
+                        <Entry x:Name="EditNameEntry" Text="John Smith" FontSize="16" BackgroundColor="White" />
+
+                        <Label Text="Email Address" FontSize="13" FontAttributes="Bold" TextColor="#374151" />
+                        <Entry x:Name="EditEmailEntry" Text="john@example.com" FontSize="16" Keyboard="Email" BackgroundColor="White" />
+
+                        <Button
+                            Text="💾  Save Changes"
+                            BackgroundColor="#165A3A"
+                            TextColor="White"
+                            CornerRadius="6"
+                            HeightRequest="48"
+                            Clicked="OnSaveProfileClicked" />
+
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- NOTIFICATION SETTINGS PAGE -->
+        <ScrollView x:Name="NotificationView" IsVisible="False">
+            <VerticalStackLayout Padding="22,10,22,120" Spacing="24">
+
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Button Text="‹" FontSize="35" BackgroundColor="Transparent" TextColor="#374151" Padding="0,0,10,0" Margin="0,-5,0,0" Clicked="OnBackToSettingsClicked" />
+                    <Label Grid.Column="1" Text="Notification Settings" FontSize="18" FontAttributes="Bold" TextColor="#1F2937" VerticalOptions="Center" />
+                    <Image Grid.Column="2" Source="bell.svg" WidthRequest="22" HeightRequest="22" VerticalOptions="Center" />
+                </Grid>
+
+                <HorizontalStackLayout Spacing="12">
+                    <Image Source="bell.svg" WidthRequest="22" HeightRequest="22" />
+                    <Label Text="Notification Preferences" FontSize="18" FontAttributes="Bold" TextColor="#1F2937" />
+                </HorizontalStackLayout>
+
+                <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="20">
+                        <Label Text="Choose which notifications you'd like to receive." FontSize="13" TextColor="#4B5563" />
+
+                        <Label Text="Notification Types" FontSize="15" TextColor="#1F2937" />
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout>
+                                <Label Text="Shift Reminders" FontSize="14" TextColor="#111827" />
+                                <Label Text="Receive reminders about upcoming shifts" FontSize="12" TextColor="#6B7280" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="True" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout>
+                                <Label Text="Task Reminders" FontSize="14" TextColor="#111827" />
+                                <Label Text="Receive reminders about tasks due soon" FontSize="12" TextColor="#6B7280" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="True" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout>
+                                <Label Text="Schedule Updates" FontSize="14" TextColor="#111827" />
+                                <Label Text="Be notified when your schedule changes" FontSize="12" TextColor="#6B7280" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="True" />
+                        </Grid>
+
+                        <BoxView HeightRequest="1" Color="#E5E7EB" />
+
+                        <Label Text="Delivery Methods" FontSize="15" TextColor="#1F2937" />
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout>
+                                <Label Text="Email Notifications" FontSize="14" TextColor="#111827" />
+                                <Label Text="Receive notifications via email" FontSize="12" TextColor="#6B7280" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="False" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout>
+                                <Label Text="Push Notifications" FontSize="14" TextColor="#111827" />
+                                <Label Text="Receive notifications on your device" FontSize="12" TextColor="#6B7280" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="True" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Button
+                    Text="💾  Save Preferences"
+                    BackgroundColor="#165A3A"
+                    TextColor="White"
+                    CornerRadius="6"
+                    HeightRequest="48"
+                    Clicked="OnSaveNotificationsClicked" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- MODAL -->
+        <Grid x:Name="ModalOverlay" IsVisible="False" BackgroundColor="#99000000" Padding="14">
+
+            <Border BackgroundColor="White" StrokeThickness="0" Padding="0" VerticalOptions="Center">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+
+                <VerticalStackLayout>
+                    <Grid Padding="16" ColumnDefinitions="*,Auto">
+                        <Label x:Name="ModalTitleLabel" Text="Modal" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
+                        <Button Grid.Column="1" Text="×" FontSize="22" BackgroundColor="Transparent" TextColor="#9CA3AF" Padding="0" Clicked="OnCloseModalClicked" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="#E5E7EB" />
+
+                    <ScrollView MaximumHeightRequest="560">
+                        <VerticalStackLayout x:Name="ModalContentLayout" Padding="22" Spacing="16" />
+                    </ScrollView>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+    </Grid>
 </ContentView>
