@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Dispatching;
 using Task_Roster.Models;
 using Task_Roster.Services;
 
@@ -7,6 +8,7 @@ namespace Task_Roster.Views.EmployeeDashboardTabs;
 public partial class EmployeeHomeView : ContentView
 {
     private readonly DatabaseService _databaseService;
+    private IDispatcherTimer? _badgeRefreshTimer;
 
     private UserModel? _currentUser;
     private TaskModel? _selectedTask;
@@ -22,6 +24,7 @@ public partial class EmployeeHomeView : ContentView
         _databaseService = new DatabaseService();
 
         LoadEmployeeDashboard();
+        StartNotificationBadgeAutoRefresh();
     }
 
     private async void LoadEmployeeDashboard()
@@ -30,6 +33,7 @@ public partial class EmployeeHomeView : ContentView
 
         await LoadCurrentUserAsync();
         await LoadDashboardDataAsync();
+        await RefreshNotificationBadgeAsync();
     }
 
     private async Task LoadCurrentUserAsync()
@@ -56,6 +60,69 @@ public partial class EmployeeHomeView : ContentView
         GreetingLabel.Text = string.IsNullOrWhiteSpace(_currentUser.FirstName)
             ? "Hi, Employee"
             : $"Hi, {_currentUser.FirstName}";
+    }
+
+    private void StartNotificationBadgeAutoRefresh()
+    {
+        _badgeRefreshTimer?.Stop();
+
+        _badgeRefreshTimer = Dispatcher.CreateTimer();
+        _badgeRefreshTimer.Interval = TimeSpan.FromSeconds(5);
+
+        _badgeRefreshTimer.Tick += async (_, _) =>
+        {
+            await RefreshNotificationBadgeAsync();
+        };
+
+        _badgeRefreshTimer.Start();
+    }
+
+    private async Task RefreshNotificationBadgeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_currentEmail))
+            return;
+
+        var notificationKeys = await BuildCurrentNotificationKeysAsync();
+        var readRows = await _databaseService.GetNotificationReadsByUserAsync(_currentEmail);
+
+        var readKeys = readRows
+            .Select(r => r.NotificationKey)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        int unreadCount = notificationKeys.Count(k => !readKeys.Contains(k));
+
+        NotificationBadge.IsVisible = unreadCount > 0;
+        TaskDetailsNotificationBadge.IsVisible = unreadCount > 0;
+
+        string displayCount = unreadCount > 99 ? "99+" : unreadCount.ToString();
+
+        NotificationBadgeLabel.Text = displayCount;
+        TaskDetailsNotificationBadgeLabel.Text = displayCount;
+    }
+
+    private async Task<List<string>> BuildCurrentNotificationKeysAsync()
+    {
+        var keys = new List<string>();
+
+        var shifts = await _databaseService.GetShiftsAsync();
+
+        var myShifts = shifts
+            .Where(s => IsAssignedToCurrentEmployee(s.Employee))
+            .ToList();
+
+        foreach (var shift in myShifts)
+        {
+            keys.Add($"shift-{shift.Id}");
+
+            var tasks = await _databaseService.GetTasksByShiftIdAsync(shift.Id);
+
+            foreach (var task in tasks)
+            {
+                keys.Add($"task-{task.Id}");
+            }
+        }
+
+        return keys;
     }
 
     private async Task LoadDashboardDataAsync()
@@ -329,6 +396,7 @@ public partial class EmployeeHomeView : ContentView
         TaskDetailsOverlay.IsVisible = false;
 
         await LoadDashboardDataAsync();
+        await RefreshNotificationBadgeAsync();
     }
 
     private void OnCloseTaskDetailsClicked(object sender, EventArgs e)
@@ -343,6 +411,7 @@ public partial class EmployeeHomeView : ContentView
         if (page != null)
         {
             await page.Navigation.PushModalAsync(new EmployeeNotification());
+            await RefreshNotificationBadgeAsync();
         }
     }
 

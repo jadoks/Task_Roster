@@ -20,16 +20,40 @@
                         TextColor="#1F2937"
                         VerticalOptions="Center" />
 
-                    <Image
-                        Grid.Column="1"
-                        Source="bell.svg"
-                        WidthRequest="22"
-                        HeightRequest="22"
-                        VerticalOptions="Center">
-                        <Image.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnBellClicked" />
-                        </Image.GestureRecognizers>
-                    </Image>
+                    <Grid Grid.Column="1" WidthRequest="30" HeightRequest="30">
+                        <Image
+                            Source="bell.svg"
+                            WidthRequest="22"
+                            HeightRequest="22"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBellClicked" />
+                            </Image.GestureRecognizers>
+                        </Image>
+
+                        <Border
+                            x:Name="MainNotificationBadge"
+                            IsVisible="False"
+                            BackgroundColor="#DC2626"
+                            WidthRequest="17"
+                            HeightRequest="17"
+                            StrokeThickness="0"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="9" />
+                            </Border.StrokeShape>
+
+                            <Label
+                                x:Name="MainNotificationBadgeLabel"
+                                Text="0"
+                                FontSize="9"
+                                TextColor="White"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center" />
+                        </Border>
+                    </Grid>
                 </Grid>
 
                 <!-- Profile Card -->
@@ -97,7 +121,6 @@
                     </Border.StrokeShape>
 
                     <VerticalStackLayout Spacing="0">
-
                         <Grid Padding="18" ColumnDefinitions="Auto,*,Auto">
                             <Grid.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnEditProfileClicked" />
@@ -125,7 +148,6 @@
                                 HeightRequest="18"
                                 VerticalOptions="Center" />
                         </Grid>
-
                     </VerticalStackLayout>
                 </Border>
 
@@ -138,7 +160,6 @@
                     </Border.StrokeShape>
 
                     <VerticalStackLayout Spacing="0">
-
                         <Grid Padding="18" ColumnDefinitions="Auto,*,Auto">
                             <Grid.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnHelpCenterClicked" />
@@ -172,7 +193,6 @@
                             <Label Grid.Column="1" Text="About TaskRoster" FontSize="15" TextColor="#111827" Margin="16,0" VerticalOptions="Center" />
                             <Image Grid.Column="2" Source="chevronright.svg" WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
                         </Grid>
-
                     </VerticalStackLayout>
                 </Border>
 
@@ -211,16 +231,40 @@
                         TextColor="#1F2937"
                         VerticalOptions="Center" />
 
-                    <Image
-                        Grid.Column="2"
-                        Source="bell.svg"
-                        WidthRequest="22"
-                        HeightRequest="22"
-                        VerticalOptions="Center">
-                        <Image.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnBellClicked" />
-                        </Image.GestureRecognizers>
-                    </Image>
+                    <Grid Grid.Column="2" WidthRequest="30" HeightRequest="30">
+                        <Image
+                            Source="bell.svg"
+                            WidthRequest="22"
+                            HeightRequest="22"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBellClicked" />
+                            </Image.GestureRecognizers>
+                        </Image>
+
+                        <Border
+                            x:Name="EditNotificationBadge"
+                            IsVisible="False"
+                            BackgroundColor="#DC2626"
+                            WidthRequest="17"
+                            HeightRequest="17"
+                            StrokeThickness="0"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="9" />
+                            </Border.StrokeShape>
+
+                            <Label
+                                x:Name="EditNotificationBadgeLabel"
+                                Text="0"
+                                FontSize="9"
+                                TextColor="White"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center" />
+                        </Border>
+                    </Grid>
                 </Grid>
 
                 <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="24">

@@ -1,26 +1,27 @@
 ﻿using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Dispatching;
 using Task_Roster.Models;
 using Task_Roster.Services;
 using Task_Roster.Views;
-using Microsoft.Maui.ApplicationModel.Communication;
 
 namespace Task_Roster.Views.EmployeeDashboardTabs;
 
 public partial class EmployeeSettingsView : ContentView
 {
     private readonly DatabaseService _databaseService;
-
+    private IDispatcherTimer? _badgeRefreshTimer;
 
     private string _currentEmail = "";
+    private string _currentFullName = "";
 
     public EmployeeSettingsView()
     {
         InitializeComponent();
 
         _databaseService = new DatabaseService();
-       
 
         LoadCurrentUser();
+        StartNotificationBadgeAutoRefresh();
     }
 
     private async void LoadCurrentUser()
@@ -37,14 +38,12 @@ public partial class EmployeeSettingsView : ContentView
             return;
 
         _currentEmail = user.Email;
+        _currentFullName = $"{user.FirstName} {user.LastName}".Trim();
 
-        string fullName =
-            $"{user.FirstName} {user.LastName}".Trim();
-
-        ProfileNameLabel.Text = fullName;
+        ProfileNameLabel.Text = _currentFullName;
         ProfileEmailLabel.Text = user.Email;
 
-        EditNameEntry.Text = fullName;
+        EditNameEntry.Text = _currentFullName;
         EditEmailEntry.Text = user.Email;
 
         string initials =
@@ -81,6 +80,83 @@ public partial class EmployeeSettingsView : ContentView
             ProfileInitialsLabel.IsVisible = true;
             EditProfileInitialsLabel.IsVisible = true;
         }
+
+        await RefreshNotificationBadgeAsync();
+    }
+
+    private void StartNotificationBadgeAutoRefresh()
+    {
+        _badgeRefreshTimer?.Stop();
+
+        _badgeRefreshTimer = Dispatcher.CreateTimer();
+        _badgeRefreshTimer.Interval = TimeSpan.FromSeconds(5);
+
+        _badgeRefreshTimer.Tick += async (_, _) =>
+        {
+            await RefreshNotificationBadgeAsync();
+        };
+
+        _badgeRefreshTimer.Start();
+    }
+
+    private async Task RefreshNotificationBadgeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_currentEmail))
+            return;
+
+        var notificationKeys = await BuildCurrentNotificationKeysAsync();
+        var readRows = await _databaseService.GetNotificationReadsByUserAsync(_currentEmail);
+
+        var readKeys = readRows
+            .Select(r => r.NotificationKey)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        int unreadCount = notificationKeys.Count(k => !readKeys.Contains(k));
+
+        MainNotificationBadge.IsVisible = unreadCount > 0;
+        EditNotificationBadge.IsVisible = unreadCount > 0;
+
+        string displayCount = unreadCount > 99 ? "99+" : unreadCount.ToString();
+
+        MainNotificationBadgeLabel.Text = displayCount;
+        EditNotificationBadgeLabel.Text = displayCount;
+    }
+
+    private async Task<List<string>> BuildCurrentNotificationKeysAsync()
+    {
+        var keys = new List<string>();
+
+        var shifts = await _databaseService.GetShiftsAsync();
+
+        var myShifts = shifts
+            .Where(s => IsCurrentEmployee(s.Employee))
+            .ToList();
+
+        foreach (var shift in myShifts)
+        {
+            keys.Add($"shift-{shift.Id}");
+
+            var tasks = await _databaseService.GetTasksByShiftIdAsync(shift.Id);
+
+            foreach (var task in tasks)
+            {
+                keys.Add($"task-{task.Id}");
+            }
+        }
+
+        return keys;
+    }
+
+    private bool IsCurrentEmployee(string assignedEmployee)
+    {
+        if (string.IsNullOrWhiteSpace(assignedEmployee))
+            return false;
+
+        if (assignedEmployee == "-- Unassigned --")
+            return false;
+
+        return assignedEmployee.Equals(_currentEmail, StringComparison.OrdinalIgnoreCase) ||
+               assignedEmployee.Equals(_currentFullName, StringComparison.OrdinalIgnoreCase);
     }
 
     private void OnEditProfileClicked(object sender, EventArgs e)
@@ -97,10 +173,13 @@ public partial class EmployeeSettingsView : ContentView
 
     private async void OnBellClicked(object sender, TappedEventArgs e)
     {
-        Page? page = Window?.Page;
+        Page? page = Window?.Page ?? Application.Current?.Windows[0].Page;
 
         if (page != null)
-            await page.Navigation.PushAsync(new EmployeeNotification());
+        {
+            await page.Navigation.PushModalAsync(new EmployeeNotification());
+            await RefreshNotificationBadgeAsync();
+        }
     }
 
     private async void OnProfileCameraTapped(object sender, TappedEventArgs e)
@@ -132,10 +211,7 @@ public partial class EmployeeSettingsView : ContentView
 
             if (user == null)
             {
-                await ShowAlert(
-                    "Error",
-                    "Current user was not found.");
-
+                await ShowAlert("Error", "Current user was not found.");
                 return;
             }
 
@@ -159,9 +235,7 @@ public partial class EmployeeSettingsView : ContentView
         }
         catch
         {
-            await ShowAlert(
-                "Error",
-                "Unable to select profile picture.");
+            await ShowAlert("Error", "Unable to select profile picture.");
         }
     }
 
@@ -173,10 +247,7 @@ public partial class EmployeeSettingsView : ContentView
         if (string.IsNullOrWhiteSpace(fullName) ||
             string.IsNullOrWhiteSpace(newEmail))
         {
-            await ShowAlert(
-                "Missing Information",
-                "Please complete all fields.");
-
+            await ShowAlert("Missing Information", "Please complete all fields.");
             return;
         }
 
@@ -185,10 +256,7 @@ public partial class EmployeeSettingsView : ContentView
 
         if (currentUser == null)
         {
-            await ShowAlert(
-                "Error",
-                "Current user was not found.");
-
+            await ShowAlert("Error", "Current user was not found.");
             return;
         }
 
@@ -199,35 +267,35 @@ public partial class EmployeeSettingsView : ContentView
 
             if (existingUser != null)
             {
-                await ShowAlert(
-                    "Email Already Exists",
-                    "This email is already used by another account.");
-
+                await ShowAlert("Email Already Exists", "This email is already used by another account.");
                 return;
             }
         }
 
-        string[] nameParts = fullName.Split(' ', 2);
+        string[] nameParts = fullName.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
 
-        currentUser.FirstName = nameParts[0];
+        currentUser.FirstName = nameParts.Length > 0 ? nameParts[0] : "";
         currentUser.LastName = nameParts.Length > 1 ? nameParts[1] : "";
         currentUser.Email = newEmail;
 
         await _databaseService.UpdateUserAsync(currentUser);
 
+        string updatedFullName =
+            $"{currentUser.FirstName} {currentUser.LastName}".Trim();
+
         Preferences.Set("UserEmail", currentUser.Email);
         Preferences.Set("UserName", currentUser.FirstName);
         Preferences.Set("UserFirstName", currentUser.FirstName);
         Preferences.Set("UserLastName", currentUser.LastName);
+        Preferences.Set("UserFullName", updatedFullName);
         Preferences.Set("UserRole", currentUser.Role);
 
         _currentEmail = currentUser.Email;
+        _currentFullName = updatedFullName;
 
         LoadCurrentUser();
 
-        await ShowAlert(
-            "Success",
-            "Profile updated successfully.");
+        await ShowAlert("Success", "Profile updated successfully.");
 
         SettingsMainView.IsVisible = true;
         EditProfileView.IsVisible = false;
@@ -327,11 +395,14 @@ public partial class EmployeeSettingsView : ContentView
         if (!confirm)
             return;
 
+        _badgeRefreshTimer?.Stop();
+
         Preferences.Set("IsLoggedIn", false);
         Preferences.Remove("UserRole");
         Preferences.Remove("UserName");
         Preferences.Remove("UserFirstName");
         Preferences.Remove("UserLastName");
+        Preferences.Remove("UserFullName");
         Preferences.Remove("UserEmail");
 
         Application.Current!.Windows[0].Page =
@@ -370,7 +441,7 @@ public partial class EmployeeSettingsView : ContentView
 
     private async Task ShowAlert(string title, string message)
     {
-        Page? page = Window?.Page;
+        Page? page = Window?.Page ?? Application.Current?.Windows[0].Page;
 
         if (page != null)
             await page.DisplayAlert(title, message, "OK");
@@ -378,7 +449,7 @@ public partial class EmployeeSettingsView : ContentView
 
     private async Task<bool> ShowConfirm(string title, string message)
     {
-        Page? page = Window?.Page;
+        Page? page = Window?.Page ?? Application.Current?.Windows[0].Page;
 
         if (page != null)
         {

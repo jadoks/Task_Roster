@@ -31,12 +31,7 @@
                 TextColor="#1F2937"
                 VerticalOptions="Center" />
 
-            <Image
-                Grid.Column="2"
-                Source="bell.svg"
-                WidthRequest="22"
-                HeightRequest="22"
-                VerticalOptions="Center" />
+            
         </Grid>
 
         <!-- CONTENT -->
