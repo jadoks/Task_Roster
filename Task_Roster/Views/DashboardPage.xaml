@@ -7,14 +7,16 @@
     BackgroundColor="{StaticResource PageBackground}"
     Shell.NavBarIsVisible="False">
 
-    <Grid RowDefinitions="*,Auto">
+    <Grid>
 
         <ContentView
             x:Name="MainContent"
-            Grid.Row="0" />
+            Padding="0,0,0,95" />
 
         <controls:FloatingNavBar
-            Grid.Row="1"
+            x:Name="BottomNav"
+            VerticalOptions="End"
+            InputTransparent="False"
             TabChanged="OnTabChanged" />
 
     </Grid>

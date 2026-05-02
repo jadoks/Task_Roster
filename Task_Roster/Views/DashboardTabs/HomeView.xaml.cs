@@ -29,40 +29,56 @@ public partial class HomeView : ContentView
 
     private async void OnCreateScheduleTapped(object sender, TappedEventArgs e)
     {
-        var scheduleView = new ScheduleView();
+        DashboardPage? dashboard = FindDashboardPage();
 
-        var page = new ContentPage
+        if (dashboard != null)
         {
-            BackgroundColor = Color.FromArgb("#F5F6F8"),
-            Content = scheduleView
-        };
-
-        Page? currentPage = Window?.Page ?? Application.Current?.Windows[0].Page;
-
-        if (currentPage != null)
+            await dashboard.OpenScheduleQuickActionAsync();
+        }
+        else
         {
-            await currentPage.Navigation.PushModalAsync(page);
-            scheduleView.OpenAddShiftFromQuickAction();
+            await ShowAlert("Navigation Error", "Dashboard page was not found.");
         }
     }
 
     private async void OnManageTeamTapped(object sender, TappedEventArgs e)
     {
-        var teamView = new TeamView();
+        DashboardPage? dashboard = FindDashboardPage();
 
-        var page = new ContentPage
+        if (dashboard != null)
         {
-            BackgroundColor = Color.FromArgb("#F5F6F8"),
-            Content = teamView
-        };
-
-        Page? currentPage = Window?.Page ?? Application.Current?.Windows[0].Page;
-
-        if (currentPage != null)
-        {
-            await currentPage.Navigation.PushModalAsync(page);
-            teamView.OpenAddEmployeeFromQuickAction();
+            await dashboard.OpenTeamQuickActionAsync();
         }
+        else
+        {
+            await ShowAlert("Navigation Error", "Dashboard page was not found.");
+        }
+    }
+
+    private DashboardPage? FindDashboardPage()
+    {
+        Element? current = this;
+
+        while (current != null)
+        {
+            if (current is DashboardPage dashboard)
+                return dashboard;
+
+            current = current.Parent;
+        }
+
+        Page? page = Window?.Page ?? Application.Current?.Windows[0].Page;
+
+        if (page is DashboardPage directDashboard)
+            return directDashboard;
+
+        if (page is NavigationPage nav && nav.CurrentPage is DashboardPage navDashboard)
+            return navDashboard;
+
+        if (page is Shell shell && shell.CurrentPage is DashboardPage shellDashboard)
+            return shellDashboard;
+
+        return null;
     }
 
     private async Task LoadStatsAsync()
@@ -278,6 +294,7 @@ public partial class HomeView : ContentView
                 count++;
 
             var tasks = await _databaseService.GetTasksByShiftIdAsync(shift.Id);
+
             count += tasks.Count(t => t.IsCompleted);
         }
 
@@ -293,6 +310,14 @@ public partial class HomeView : ContentView
             await page.Navigation.PushModalAsync(new ManagerNotification());
             await LoadManagerNotificationBadgeAsync();
         }
+    }
+
+    private async Task ShowAlert(string title, string message)
+    {
+        Page? page = Window?.Page ?? Application.Current?.Windows[0].Page;
+
+        if (page != null)
+            await page.DisplayAlert(title, message, "OK");
     }
 
     private static string FormatTime(TimeSpan time)

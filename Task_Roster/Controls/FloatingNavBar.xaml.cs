@@ -6,7 +6,6 @@ public partial class FloatingNavBar : ContentView
 
     private int _selectedIndex;
 
-    // Negative value makes the active circle move upward.
     private const double IndicatorY = 8;
 
     private readonly string[] _icons =
@@ -40,8 +39,10 @@ public partial class FloatingNavBar : ContentView
         Loaded += async (_, _) =>
         {
             await Task.Delay(100);
+
             IndicatorIcon.Source = _icons[_selectedIndex];
             UpdateButtonVisibility();
+
             await MoveIndicator(_selectedIndex, false);
         };
 
@@ -73,17 +74,22 @@ public partial class FloatingNavBar : ContentView
 
     private async Task SelectTab(int index)
     {
-        if (_selectedIndex == index)
+        if (index < 0 || index >= _icons.Length)
             return;
+
+        bool sameTab = _selectedIndex == index;
 
         _selectedIndex = index;
         IndicatorIcon.Source = _icons[index];
 
         UpdateButtonVisibility();
 
-        await Indicator.ScaleTo(1.10, 80, Easing.CubicOut);
-        await MoveIndicator(index, true);
-        await Indicator.ScaleTo(1.0, 80, Easing.CubicIn);
+        if (!sameTab)
+        {
+            await Indicator.ScaleTo(1.10, 80, Easing.CubicOut);
+            await MoveIndicator(index, true);
+            await Indicator.ScaleTo(1.0, 80, Easing.CubicIn);
+        }
 
         TabChanged?.Invoke(this, index);
     }
@@ -95,23 +101,18 @@ public partial class FloatingNavBar : ContentView
 
         for (int i = 0; i < buttons.Length; i++)
         {
-            if (i == _selectedIndex)
-            {
-                // Active tab: hide icon and label from nav row.
-                // Only the lime circle icon remains visible.
-                buttons[i].Opacity = 0;
-                labels[i].Opacity = 0;
-                buttons[i].InputTransparent = true;
-            }
-            else
-            {
-                // Inactive tabs: show icon and label in gray.
-                buttons[i].Opacity = 0.45;
-                labels[i].Opacity = 1;
-                labels[i].TextColor = Color.FromArgb("#8A8A8A");
-                buttons[i].InputTransparent = false;
-            }
+            bool active = i == _selectedIndex;
+
+            buttons[i].Opacity = active ? 0 : 0.45;
+            labels[i].Opacity = active ? 0 : 1;
+            labels[i].TextColor = Color.FromArgb("#8A8A8A");
+
+            // Keep all buttons clickable.
+            buttons[i].InputTransparent = false;
         }
+
+        // Let the floating active circle never block button taps.
+        Indicator.InputTransparent = true;
     }
 
     private async Task MoveIndicator(int index, bool animated)
@@ -134,5 +135,15 @@ public partial class FloatingNavBar : ContentView
         }
 
         await Indicator.TranslateTo(indicatorX, IndicatorY, 240, Easing.CubicOut);
+    }
+
+    public async Task SetActiveTab(int index)
+    {
+        _selectedIndex = index;
+
+        IndicatorIcon.Source = _icons[index];
+        UpdateButtonVisibility();
+
+        await MoveIndicator(index, true);
     }
 }
