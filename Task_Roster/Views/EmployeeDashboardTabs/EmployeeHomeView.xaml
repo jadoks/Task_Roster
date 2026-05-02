@@ -15,15 +15,40 @@
                         FontAttributes="Bold"
                         TextColor="#111827" />
 
-                    <Image
-                        Grid.Column="1"
-                        Source="bell.svg"
-                        WidthRequest="24"
-                        HeightRequest="24">
-                        <Image.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnNotificationTapped" />
-                        </Image.GestureRecognizers>
-                    </Image>
+                    <Grid Grid.Column="1" WidthRequest="30" HeightRequest="30">
+                        <Image
+                            Source="bell.svg"
+                            WidthRequest="24"
+                            HeightRequest="24"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnNotificationTapped" />
+                            </Image.GestureRecognizers>
+                        </Image>
+
+                        <Border
+                            x:Name="NotificationBadge"
+                            IsVisible="False"
+                            BackgroundColor="#DC2626"
+                            WidthRequest="17"
+                            HeightRequest="17"
+                            StrokeThickness="0"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="9" />
+                            </Border.StrokeShape>
+
+                            <Label
+                                x:Name="NotificationBadgeLabel"
+                                Text="0"
+                                FontSize="9"
+                                TextColor="White"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center" />
+                        </Border>
+                    </Grid>
                 </Grid>
 
                 <VerticalStackLayout Spacing="2">
@@ -139,10 +164,40 @@
                         HorizontalOptions="Center"
                         VerticalOptions="Center" />
 
-                    <Image
-                        Grid.Column="2"
-                        Source="bell.svg"
-                        WidthRequest="24" />
+                    <Grid Grid.Column="2" WidthRequest="30" HeightRequest="30">
+                        <Image
+                            Source="bell.svg"
+                            WidthRequest="24"
+                            HeightRequest="24"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnNotificationTapped" />
+                            </Image.GestureRecognizers>
+                        </Image>
+
+                        <Border
+                            x:Name="TaskDetailsNotificationBadge"
+                            IsVisible="False"
+                            BackgroundColor="#DC2626"
+                            WidthRequest="17"
+                            HeightRequest="17"
+                            StrokeThickness="0"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="9" />
+                            </Border.StrokeShape>
+
+                            <Label
+                                x:Name="TaskDetailsNotificationBadgeLabel"
+                                Text="0"
+                                FontSize="9"
+                                TextColor="White"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center" />
+                        </Border>
+                    </Grid>
                 </Grid>
 
                 <Border BackgroundColor="White" StrokeThickness="0" Padding="20">

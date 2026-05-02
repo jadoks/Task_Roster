@@ -19,6 +19,7 @@ public class DatabaseService
         _database.CreateTableAsync<EmployeeModel>().Wait();
         _database.CreateTableAsync<UserModel>().Wait();
         _database.CreateTableAsync<TaskModel>().Wait();
+        _database.CreateTableAsync<NotificationReadModel>().Wait();
 
         AddMissingUserColumns();
     }
@@ -147,5 +148,34 @@ public class DatabaseService
     public async Task<int> DeleteTaskAsync(TaskModel task)
     {
         return await _database.DeleteAsync(task);
+    }
+
+    public async Task<List<NotificationReadModel>> GetNotificationReadsByUserAsync(string userEmail)
+    {
+        return await _database.Table<NotificationReadModel>()
+            .Where(n => n.UserEmail == userEmail)
+            .ToListAsync();
+    }
+
+    public async Task<NotificationReadModel?> GetNotificationReadAsync(string userEmail, string notificationKey)
+    {
+        return await _database.Table<NotificationReadModel>()
+            .Where(n => n.UserEmail == userEmail && n.NotificationKey == notificationKey)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<int> MarkNotificationReadAsync(string userEmail, string notificationKey)
+    {
+        var existing = await GetNotificationReadAsync(userEmail, notificationKey);
+
+        if (existing != null)
+            return 0;
+
+        return await _database.InsertAsync(new NotificationReadModel
+        {
+            UserEmail = userEmail,
+            NotificationKey = notificationKey,
+            ReadAt = DateTime.Now
+        });
     }
 }
