@@ -18,6 +18,7 @@ public class DatabaseService
         _database.CreateTableAsync<ShiftModel>().Wait();
         _database.CreateTableAsync<EmployeeModel>().Wait();
         _database.CreateTableAsync<UserModel>().Wait();
+        _database.CreateTableAsync<TaskModel>().Wait();
 
         AddMissingUserColumns();
     }
@@ -124,5 +125,27 @@ public class DatabaseService
     public async Task DeleteEmployeeAsync(EmployeeModel employee)
     {
         await _database.DeleteAsync(employee);
+    }
+
+    public async Task<int> AddTaskAsync(TaskModel task)
+    {
+        return await _database.InsertAsync(task);
+    }
+
+    public async Task<List<TaskModel>> GetTasksByShiftIdAsync(int shiftId)
+    {
+        return await _database.Table<TaskModel>()
+            .Where(t => t.ShiftId == shiftId)
+            .ToListAsync();
+    }
+
+    public async Task<int> UpdateTaskAsync(TaskModel task)
+    {
+        return await _database.UpdateAsync(task);
+    }
+
+    public async Task<int> DeleteTaskAsync(TaskModel task)
+    {
+        return await _database.DeleteAsync(task);
     }
 }

@@ -23,8 +23,8 @@ public partial class SignInPage : ContentPage
 
         PasswordToggleButton.Source =
             PasswordEntry.IsPassword
-            ? "eyeslash.svg"
-            : "eye.svg";
+                ? "eyeslash.svg"
+                : "eye.svg";
     }
 
     private async void OnLoginClicked(object sender, EventArgs e)
@@ -39,8 +39,7 @@ public partial class SignInPage : ContentPage
             return;
         }
 
-        UserModel? user =
-            await _databaseService.LoginUserAsync(email, password);
+        UserModel? user = await _databaseService.LoginUserAsync(email, password);
 
         if (user == null)
         {
@@ -48,11 +47,14 @@ public partial class SignInPage : ContentPage
             return;
         }
 
+        string fullName = $"{user.FirstName} {user.LastName}".Trim();
+
         Preferences.Set("IsLoggedIn", true);
         Preferences.Set("UserRole", user.Role);
         Preferences.Set("UserName", user.FirstName);
         Preferences.Set("UserFirstName", user.FirstName);
         Preferences.Set("UserLastName", user.LastName);
+        Preferences.Set("UserFullName", fullName);
         Preferences.Set("UserEmail", user.Email);
 
         if (user.Role == "Manager")
@@ -65,7 +67,7 @@ public partial class SignInPage : ContentPage
         else if (user.Role == "Employee")
         {
             Application.Current!.Windows[0].Page =
-                new EmployeeDashboardPage();
+                new NavigationPage(new EmployeeDashboardPage());
         }
         else
         {
@@ -101,8 +103,7 @@ public partial class SignInPage : ContentPage
             return;
         }
 
-        UserModel? user =
-            await _databaseService.GetUserByEmailAsync(email);
+        UserModel? user = await _databaseService.GetUserByEmailAsync(email);
 
         if (user == null)
         {
@@ -155,8 +156,8 @@ public partial class SignInPage : ContentPage
 
         NewPasswordToggleButton.Source =
             NewPasswordEntry.IsPassword
-            ? "eyeslash.svg"
-            : "eye.svg";
+                ? "eyeslash.svg"
+                : "eye.svg";
     }
 
     private void OnToggleConfirmPasswordClicked(object sender, EventArgs e)
@@ -165,8 +166,8 @@ public partial class SignInPage : ContentPage
 
         ConfirmPasswordToggleButton.Source =
             ConfirmPasswordEntry.IsPassword
-            ? "eyeslash.svg"
-            : "eye.svg";
+                ? "eyeslash.svg"
+                : "eye.svg";
     }
 
     private async void OnResetPasswordClicked(object sender, EventArgs e)

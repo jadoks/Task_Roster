@@ -3,9 +3,7 @@
     x:Class="Task_Roster.Views.EmployeeDashboardTabs.EmployeeDashboardPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:tabs="clr-namespace:Task_Roster.Views.EmployeeDashboardTabs"
     xmlns:controls="clr-namespace:Task_Roster.Controls"
-    
     BackgroundColor="#F8F9FB"
     NavigationPage.HasNavigationBar="False"
     Shell.NavBarIsVisible="False">

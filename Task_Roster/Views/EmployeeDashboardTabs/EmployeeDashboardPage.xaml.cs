@@ -1,10 +1,31 @@
+using Task_Roster.Models;
+using Task_Roster.Services;
+
 namespace Task_Roster.Views.EmployeeDashboardTabs;
 
 public partial class EmployeeDashboardPage : ContentPage
 {
+    private readonly DatabaseService _databaseService;
+    private UserModel? _currentUser;
+
     public EmployeeDashboardPage()
     {
         InitializeComponent();
+
+        _databaseService = new DatabaseService();
+
+        LoadCurrentEmployee();
+    }
+
+    private async void LoadCurrentEmployee()
+    {
+        string email = Preferences.Get("UserEmail", "");
+
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            _currentUser = await _databaseService.GetUserByEmailAsync(email);
+        }
+
         MainContent.Content = new EmployeeHomeView();
     }
 

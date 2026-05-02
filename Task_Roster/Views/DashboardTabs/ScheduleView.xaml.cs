@@ -10,27 +10,25 @@ public partial class ScheduleView : ContentView
     private readonly DatabaseService _databaseService;
 
     private DateTime _weekStart;
-
     private ShiftModel? _pendingShift;
-
     private ShiftModel? _selectedShift;
+    private TaskModel? _selectedTask;
+
+    private string _selectedTaskPriority = "Medium";
 
     public ScheduleView()
     {
         InitializeComponent();
 
         _databaseService = new DatabaseService();
-
         _weekStart = GetStartOfWeek(DateTime.Today);
 
         RolePicker.SelectedIndex = 0;
-
         LocationPicker.SelectedIndex = 0;
-
         ShiftDatePicker.Date = DateTime.Today;
+        ShiftDatePicker.MinimumDate = DateTime.Today;
 
         LoadEmployees();
-
         RenderWeek();
     }
 
@@ -39,7 +37,6 @@ public partial class ScheduleView : ContentView
         var employees = await _databaseService.GetEmployeesAsync();
 
         EmployeePicker.Items.Clear();
-
         EmployeePicker.Items.Add("-- Unassigned --");
 
         foreach (var employee in employees)
@@ -50,311 +47,254 @@ public partial class ScheduleView : ContentView
         EmployeePicker.SelectedIndex = 0;
     }
 
-    private async Task<EmployeeModel?> FindBestEmployeeAsync(
-        string role,
-        DateTime shiftDate)
+    private async Task<EmployeeModel?> FindBestEmployeeAsync(string role, DateTime shiftDate)
     {
         var employees = await _databaseService.GetEmployeesAsync();
-
         string dayName = shiftDate.DayOfWeek.ToString();
 
         var qualifiedEmployees = employees
             .Where(e =>
-                e.Skills.Contains(
-                    role,
-                    StringComparison.OrdinalIgnoreCase)
-
-                &&
-
-                e.Availability.Contains(
-                    dayName,
-                    StringComparison.OrdinalIgnoreCase))
+                e.Skills.Contains(role, StringComparison.OrdinalIgnoreCase) &&
+                e.Availability.Contains(dayName, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         if (qualifiedEmployees.Count == 0)
             return null;
 
         Random random = new();
-
-        return qualifiedEmployees[
-            random.Next(qualifiedEmployees.Count)];
+        return qualifiedEmployees[random.Next(qualifiedEmployees.Count)];
     }
 
     private async void RenderWeek()
     {
-        WeekRangeLabel.Text =
-            $"{_weekStart:MMM d}  -  {_weekStart.AddDays(6):MMM d}";
+        WeekRangeLabel.Text = $"{_weekStart:MMM d}  -  {_weekStart.AddDays(6):MMM d}";
 
         DaysHeaderGrid.Children.Clear();
-
         ScheduleGrid.Children.Clear();
+        ShiftDetailsCard.IsVisible = false;
 
         for (int i = 0; i < 7; i++)
         {
             DateTime day = _weekStart.AddDays(i);
+            bool isPastDay = day.Date < DateTime.Today;
 
             var dayStack = new VerticalStackLayout
             {
                 Spacing = 4,
-                HorizontalOptions = LayoutOptions.Center
+                HorizontalOptions = LayoutOptions.Center,
+                Children =
+                {
+                    new Label
+                    {
+                        Text = day.ToString("ddd", CultureInfo.InvariantCulture),
+                        FontSize = 10,
+                        FontAttributes = FontAttributes.Bold,
+                        TextColor = isPastDay ? Color.FromArgb("#9CA3AF") : Colors.Black,
+                        HorizontalTextAlignment = TextAlignment.Center
+                    },
+                    new Label
+                    {
+                        Text = day.ToString("MMM d", CultureInfo.InvariantCulture),
+                        FontSize = 9,
+                        TextColor = isPastDay ? Color.FromArgb("#9CA3AF") : Color.FromArgb("#6B7280"),
+                        HorizontalTextAlignment = TextAlignment.Center
+                    }
+                }
             };
-
-            dayStack.Children.Add(new Label
-            {
-                Text = day.ToString(
-                    "ddd",
-                    CultureInfo.InvariantCulture),
-
-                FontSize = 10,
-
-                FontAttributes = FontAttributes.Bold,
-
-                TextColor = Colors.Black,
-
-                HorizontalTextAlignment =
-                    TextAlignment.Center
-            });
-
-            dayStack.Children.Add(new Label
-            {
-                Text = day.ToString(
-                    "MMM d",
-                    CultureInfo.InvariantCulture),
-
-                FontSize = 9,
-
-                TextColor = Color.FromArgb("#6B7280"),
-
-                HorizontalTextAlignment =
-                    TextAlignment.Center
-            });
 
             DaysHeaderGrid.Add(dayStack, i, 0);
 
             var addButton = new Border
             {
-                BackgroundColor = Colors.White,
-
+                BackgroundColor = isPastDay ? Color.FromArgb("#F3F4F6") : Colors.White,
                 Stroke = Color.FromArgb("#D1D5DB"),
-
-                StrokeDashArray =
-                    new DoubleCollection { 3, 3 },
-
+                StrokeDashArray = new DoubleCollection { 3, 3 },
                 Padding = 8,
-
-                StrokeShape = new RoundRectangle
-                {
-                    CornerRadius = 6
-                },
-
+                StrokeShape = new RoundRectangle { CornerRadius = 6 },
                 Content = new VerticalStackLayout
                 {
                     Spacing = 2,
-
-                    HorizontalOptions =
-                        LayoutOptions.Center,
-
+                    HorizontalOptions = LayoutOptions.Center,
                     Children =
                     {
                         new Label
                         {
-                            Text = "+",
-
+                            Text = isPastDay ? "×" : "+",
                             FontSize = 22,
-
-                            TextColor =
-                                Color.FromArgb("#6B7280"),
-
-                            HorizontalTextAlignment =
-                                TextAlignment.Center
+                            TextColor = Color.FromArgb("#6B7280"),
+                            HorizontalTextAlignment = TextAlignment.Center
                         },
-
                         new Label
                         {
-                            Text = "Add",
-
+                            Text = isPastDay ? "Past" : "Add",
                             FontSize = 10,
-
-                            TextColor =
-                                Color.FromArgb("#6B7280"),
-
-                            HorizontalTextAlignment =
-                                TextAlignment.Center
+                            TextColor = Color.FromArgb("#6B7280"),
+                            HorizontalTextAlignment = TextAlignment.Center
                         }
                     }
                 }
             };
 
             var tap = new TapGestureRecognizer();
-
-            tap.Tapped += (_, _) =>
+            tap.Tapped += async (_, _) =>
             {
-                ShiftDatePicker.Date = day;
+                if (day.Date < DateTime.Today)
+                {
+                    await ShowAlert("Invalid Date", "Managers cannot add shifts for past days.");
+                    return;
+                }
 
+                ShiftDatePicker.Date = day;
                 OpenAddShiftModal();
             };
 
             addButton.GestureRecognizers.Add(tap);
-
             ScheduleGrid.Add(addButton, i, 0);
         }
 
-        await LoadShifts();
+        await LoadShiftsFromSQLiteAsync();
     }
 
-    private async Task LoadShifts()
+    private async Task LoadShiftsFromSQLiteAsync()
     {
         var shifts = await _databaseService.GetShiftsAsync();
 
-        foreach (var shift in shifts)
+        var weekShifts = shifts
+            .Where(s =>
+                s.Date.Date >= _weekStart.Date &&
+                s.Date.Date <= _weekStart.AddDays(6).Date)
+            .OrderBy(s => s.Date)
+            .ThenBy(s => s.StartTime)
+            .ToList();
+
+        foreach (var shift in weekShifts)
         {
-            if (shift.Date.Date >= _weekStart.Date
-                && shift.Date.Date <= _weekStart.AddDays(6).Date)
-            {
-                AddShiftCard(shift);
-            }
+            AddShiftCard(shift);
         }
     }
 
-    private void OnPreviousWeekClicked(
-        object sender,
-        EventArgs e)
+    private void OnPreviousWeekClicked(object sender, EventArgs e)
     {
         _weekStart = _weekStart.AddDays(-7);
-
         RenderWeek();
     }
 
-    private void OnNextWeekClicked(
-        object sender,
-        EventArgs e)
+    private void OnNextWeekClicked(object sender, EventArgs e)
     {
         _weekStart = _weekStart.AddDays(7);
-
         RenderWeek();
     }
 
-    private void OnAddShiftClicked(
-        object sender,
-        EventArgs e)
+    private async void OnAddShiftClicked(object sender, EventArgs e)
     {
+        if (ShiftDatePicker.Date.Date < DateTime.Today)
+        {
+            await ShowAlert("Invalid Date", "Managers cannot add shifts for past days.");
+            ShiftDatePicker.Date = DateTime.Today;
+            return;
+        }
+
         OpenAddShiftModal();
     }
 
     private void OpenAddShiftModal()
     {
+        if (ShiftDatePicker.Date.Date < DateTime.Today)
+            ShiftDatePicker.Date = DateTime.Today;
+
         AddShiftOverlay.IsVisible = true;
     }
 
-    private void OnCancelAddShiftClicked(
-        object sender,
-        EventArgs e)
+    private void OnCancelAddShiftClicked(object sender, EventArgs e)
     {
         AddShiftOverlay.IsVisible = false;
     }
 
-    private async void OnAutoAssignClicked(
-        object sender,
-        EventArgs e)
+    private async void OnAutoAssignClicked(object sender, EventArgs e)
     {
-        string role =
-            RolePicker.SelectedItem?.ToString()
-            ?? "Cashier";
+        if (ShiftDatePicker.Date.Date < DateTime.Today)
+        {
+            await ShowAlert("Invalid Date", "Managers cannot auto-assign shifts for past days.");
+            ShiftDatePicker.Date = DateTime.Today;
+            return;
+        }
 
+        string role = RolePicker.SelectedItem?.ToString() ?? "Cashier";
         DateTime shiftDate = ShiftDatePicker.Date;
 
-        var employee =
-            await FindBestEmployeeAsync(
-                role,
-                shiftDate);
+        var employee = await FindBestEmployeeAsync(role, shiftDate);
 
         if (employee == null)
         {
-            await Application.Current.MainPage.DisplayAlert(
-                "No Match Found",
-                $"No available employee found for {role}.",
-                "OK");
-
+            await ShowAlert("No Match Found", $"No available employee found for {role}.");
             return;
         }
 
         EmployeePicker.SelectedItem = employee.Name;
-
-        await Application.Current.MainPage.DisplayAlert(
-            "Auto Assign Complete",
-            $"{employee.Name} assigned automatically.",
-            "OK");
+        await ShowAlert("Auto Assign Complete", $"{employee.Name} assigned automatically.");
     }
 
-    private void OnCreateShiftClicked(
-        object sender,
-        EventArgs e)
+    private async void OnCreateShiftClicked(object sender, EventArgs e)
     {
+        if (ShiftDatePicker.Date.Date < DateTime.Today)
+        {
+            await ShowAlert("Invalid Date", "Managers cannot create shifts for past days.");
+            ShiftDatePicker.Date = DateTime.Today;
+            return;
+        }
+
+        if (EndTimePicker.Time <= StartTimePicker.Time)
+        {
+            await ShowAlert("Invalid Time", "End time must be later than start time.");
+            return;
+        }
+
         _pendingShift = new ShiftModel
         {
             Date = ShiftDatePicker.Date,
-
             StartTime = StartTimePicker.Time,
-
             EndTime = EndTimePicker.Time,
-
-            Role = RolePicker.SelectedItem?.ToString()
-                   ?? "Cashier",
-
-            Location = LocationPicker.SelectedItem?.ToString()
-                       ?? "Downtown Store",
-
-            Employee = EmployeePicker.SelectedItem?.ToString()
-                       ?? "-- Unassigned --",
-
+            Role = RolePicker.SelectedItem?.ToString() ?? "Cashier",
+            Location = LocationPicker.SelectedItem?.ToString() ?? "Downtown Store",
+            Employee = EmployeePicker.SelectedItem?.ToString() ?? "-- Unassigned --",
             Status = "Pending"
         };
 
-        ConfirmDateLabel.Text =
-            $"📅  Date\n{_pendingShift.Date:dddd, MMMM d, yyyy}";
-
-        ConfirmTimeLabel.Text =
-            $"🕘  Time\n{FormatTime(_pendingShift.StartTime)} - {FormatTime(_pendingShift.EndTime)}";
-
-        ConfirmLocationLabel.Text =
-            $"📍  Location\n{_pendingShift.Location}";
-
-        ConfirmRoleLabel.Text =
-            $"👤  Role Needed\n{_pendingShift.Role}";
-
-        ConfirmEmployeeLabel.Text =
-            $"🧑  Assigned To\n{_pendingShift.Employee}";
+        ConfirmDateLabel.Text = $"📅  Date\n{_pendingShift.Date:dddd, MMMM d, yyyy}";
+        ConfirmTimeLabel.Text = $"🕘  Time\n{FormatTime(_pendingShift.StartTime)} - {FormatTime(_pendingShift.EndTime)}";
+        ConfirmLocationLabel.Text = $"📍  Location\n{_pendingShift.Location}";
+        ConfirmRoleLabel.Text = $"👤  Role Needed\n{_pendingShift.Role}";
+        ConfirmEmployeeLabel.Text = $"🧑  Assigned To\n{_pendingShift.Employee}";
 
         AddShiftOverlay.IsVisible = false;
-
         ConfirmOverlay.IsVisible = true;
     }
 
-    private void OnEditShiftClicked(
-        object sender,
-        EventArgs e)
+    private void OnEditShiftClicked(object sender, EventArgs e)
     {
         ConfirmOverlay.IsVisible = false;
-
         AddShiftOverlay.IsVisible = true;
     }
 
-    private async void OnConfirmCreateClicked(
-        object sender,
-        EventArgs e)
+    private async void OnConfirmCreateClicked(object sender, EventArgs e)
     {
         if (_pendingShift == null)
             return;
 
-        await _databaseService.AddShiftAsync(
-            _pendingShift);
+        if (_pendingShift.Date.Date < DateTime.Today)
+        {
+            await ShowAlert("Invalid Date", "Managers cannot create shifts for past days.");
+            ConfirmOverlay.IsVisible = false;
+            _pendingShift = null;
+            return;
+        }
+
+        await _databaseService.AddShiftAsync(_pendingShift);
 
         _selectedShift = _pendingShift;
-
         ConfirmOverlay.IsVisible = false;
 
-        AddShiftCard(_selectedShift);
-
+        RenderWeek();
         ShowShiftDetails(_selectedShift);
 
         _pendingShift = null;
@@ -362,132 +302,155 @@ public partial class ScheduleView : ContentView
 
     private void AddShiftCard(ShiftModel shift)
     {
-        int column =
-            (shift.Date.Date - _weekStart.Date).Days;
+        int column = (shift.Date.Date - _weekStart.Date).Days;
 
         if (column < 0 || column > 6)
             return;
 
+        Color bgColor = shift.Status switch
+        {
+            "Accepted" => Color.FromArgb("#DCFCE7"),
+            "Declined" => Color.FromArgb("#FEE2E2"),
+            _ => Color.FromArgb("#FEF3C7")
+        };
+
+        Color strokeColor = shift.Status switch
+        {
+            "Accepted" => Color.FromArgb("#22C55E"),
+            "Declined" => Color.FromArgb("#DC2626"),
+            _ => Color.FromArgb("#F59E0B")
+        };
+
         var card = new Border
         {
-            BackgroundColor =
-                Color.FromArgb("#DCFCE7"),
-
-            Stroke =
-                Color.FromArgb("#22C55E"),
-
+            BackgroundColor = bgColor,
+            Stroke = strokeColor,
             StrokeThickness = 2,
-
             Padding = 6,
-
             Margin = new Thickness(0, 70, 0, 0),
-
-            StrokeShape = new RoundRectangle
-            {
-                CornerRadius = 6
-            },
-
+            StrokeShape = new RoundRectangle { CornerRadius = 6 },
             Content = new VerticalStackLayout
             {
                 Spacing = 3,
-
                 Children =
                 {
                     new Label
                     {
-                        Text =
-                            FormatTime(
-                                shift.StartTime),
-
+                        Text = FormatTime(shift.StartTime),
                         FontSize = 10,
-
-                        FontAttributes =
-                            FontAttributes.Bold,
-
+                        FontAttributes = FontAttributes.Bold,
                         TextColor = Colors.Black
                     },
-
                     new Label
                     {
-                        Text =
-                            FormatTime(
-                                shift.EndTime),
-
+                        Text = FormatTime(shift.EndTime),
                         FontSize = 10,
-
                         TextColor = Colors.Black
                     },
-
                     new Label
                     {
                         Text = shift.Role,
-
                         FontSize = 10,
-
                         TextColor = Colors.Black
                     },
-
                     new Label
                     {
-                        Text = shift.Employee,
-
+                        Text = string.IsNullOrWhiteSpace(shift.Employee) ? "Unassigned" : shift.Employee,
                         FontSize = 9,
-
-                        TextColor =
-                            Color.FromArgb("#166534")
+                        TextColor = Color.FromArgb("#166534")
                     }
                 }
             }
         };
 
         var tap = new TapGestureRecognizer();
-
-        tap.Tapped += (_, _) =>
-        {
-            ShowShiftDetails(shift);
-        };
+        tap.Tapped += (_, _) => ShowShiftDetails(shift);
 
         card.GestureRecognizers.Add(tap);
-
         ScheduleGrid.Add(card, column, 0);
     }
 
-    private void ShowShiftDetails(ShiftModel shift)
+    private async void ShowShiftDetails(ShiftModel shift)
     {
         _selectedShift = shift;
+        _selectedTask = null;
 
-        DetailsRoleLabel.Text =
-            shift.Role.ToLower();
+        DetailsRoleLabel.Text = shift.Role.ToLower();
+        DetailsStatusLabel.Text = shift.Status;
 
-        DetailsStatusLabel.Text =
-            shift.Status;
+        DetailsStatusLabel.TextColor = shift.Status switch
+        {
+            "Accepted" => Color.FromArgb("#16A34A"),
+            "Declined" => Color.FromArgb("#DC2626"),
+            _ => Color.FromArgb("#CA8A04")
+        };
 
-        DetailsDateLabel.Text =
-            $"📅  {shift.Date:dddd, MMMM d, yyyy}";
+        DetailsDateLabel.Text = $"📅  {shift.Date:dddd, MMMM d, yyyy}";
+        DetailsTimeLabel.Text = $"🕘  {FormatTime(shift.StartTime)} - {FormatTime(shift.EndTime)}";
+        DetailsLocationLabel.Text = $"📍  {shift.Location}";
 
-        DetailsTimeLabel.Text =
-            $"🕘  {FormatTime(shift.StartTime)} - {FormatTime(shift.EndTime)}";
-
-        DetailsLocationLabel.Text =
-            $"📍  {shift.Location}";
-
-        DetailsEmployeeLabel.Text =
-            shift.Employee == "-- Unassigned --"
-                ? "Unassigned"
-                : shift.Employee;
+        await LoadAssignedUserAsync(shift.Employee);
 
         ShiftDetailsCard.IsVisible = true;
+
+        await LoadShiftTasksAsync(shift);
     }
 
-    private string _selectedPriority = "Medium";
+    private async Task LoadAssignedUserAsync(string employeeName)
+    {
+        DetailsProfileImage.Source = null;
+        DetailsProfileImage.IsVisible = false;
+        DetailsProfileFallbackLabel.IsVisible = true;
+
+        if (string.IsNullOrWhiteSpace(employeeName) || employeeName == "-- Unassigned --")
+        {
+            DetailsEmployeeLabel.Text = "Unassigned";
+            DetailsEmployeeEmailLabel.Text = "No email found";
+            return;
+        }
+
+        var users = await _databaseService.GetUsersAsync();
+
+        var user = users.FirstOrDefault(u =>
+        {
+            string fullName = $"{u.FirstName} {u.LastName}".Trim();
+
+            return fullName.Equals(employeeName, StringComparison.OrdinalIgnoreCase) ||
+                   u.FirstName.Equals(employeeName, StringComparison.OrdinalIgnoreCase) ||
+                   u.Email.Equals(employeeName, StringComparison.OrdinalIgnoreCase);
+        });
+
+        if (user == null)
+        {
+            DetailsEmployeeLabel.Text = employeeName;
+            DetailsEmployeeEmailLabel.Text = "No email found";
+            return;
+        }
+
+        string displayName = $"{user.FirstName} {user.LastName}".Trim();
+
+        DetailsEmployeeLabel.Text = string.IsNullOrWhiteSpace(displayName)
+            ? user.Email
+            : displayName;
+
+        DetailsEmployeeEmailLabel.Text = user.Email;
+
+        if (user.ProfileImageBytes != null && user.ProfileImageBytes.Length > 0)
+        {
+            DetailsProfileImage.Source = ImageSource.FromStream(() => new MemoryStream(user.ProfileImageBytes));
+            DetailsProfileImage.IsVisible = true;
+            DetailsProfileFallbackLabel.IsVisible = false;
+        }
+    }
 
     private void OnAddTaskClicked(object sender, EventArgs e)
     {
-        // Clear fields before showing
+        if (_selectedShift == null)
+            return;
+
         TaskTitleEntry.Text = string.Empty;
         TaskDescriptionEditor.Text = string.Empty;
 
-        // Reset priority to Medium by default
         UpdatePriorityUI("Medium");
 
         AddTaskOverlay.IsVisible = true;
@@ -497,182 +460,224 @@ public partial class ScheduleView : ContentView
     {
         AddTaskOverlay.IsVisible = false;
     }
-    private string _selectedTaskPriority = "Medium";
 
     private void OnPrioritySelectionClicked(object sender, EventArgs e)
     {
         if (sender is Button clickedButton)
-        {
-            _selectedTaskPriority = clickedButton.Text;
-
-            // Reset all buttons to the default "unselected" look
-            LowPriorityBtn.BackgroundColor = Color.FromArgb("#F3F4F6");
-            LowPriorityBtn.TextColor = Color.FromArgb("#374151");
-
-            MediumPriorityBtn.BackgroundColor = Color.FromArgb("#F3F4F6");
-            MediumPriorityBtn.TextColor = Color.FromArgb("#374151");
-
-            HighPriorityBtn.BackgroundColor = Color.FromArgb("#F3F4F6");
-            HighPriorityBtn.TextColor = Color.FromArgb("#374151");
-
-            // Apply "selected" colors based on which one was clicked
-            if (_selectedTaskPriority == "Low")
-            {
-                LowPriorityBtn.BackgroundColor = Color.FromArgb("#DBEAFE");
-                LowPriorityBtn.TextColor = Color.FromArgb("#1E40AF");
-            }
-            else if (_selectedTaskPriority == "Medium")
-            {
-                MediumPriorityBtn.BackgroundColor = Color.FromArgb("#FEF3C7");
-                MediumPriorityBtn.TextColor = Color.FromArgb("#CA8A04");
-            }
-            else if (_selectedTaskPriority == "High")
-            {
-                HighPriorityBtn.BackgroundColor = Color.FromArgb("#FEE2E2");
-                HighPriorityBtn.TextColor = Color.FromArgb("#991B1B");
-            }
-        }
+            UpdatePriorityUI(clickedButton.Text);
     }
+
     private void UpdatePriorityUI(string priority)
     {
-        _selectedPriority = priority;
+        _selectedTaskPriority = priority;
 
-        // Reset all to default style
-        LowPriorityBtn.BackgroundColor = HighPriorityBtn.BackgroundColor = Color.FromArgb("#F9FAFB");
-        LowPriorityBtn.TextColor = HighPriorityBtn.TextColor = Color.FromArgb("#4B5563");
-        LowPriorityBtn.BorderWidth = HighPriorityBtn.BorderWidth = 0;
+        LowPriorityBtn.BackgroundColor = Color.FromArgb("#F3F4F6");
+        LowPriorityBtn.TextColor = Color.FromArgb("#374151");
 
-        MediumPriorityBtn.BackgroundColor = Color.FromArgb("#F9FAFB");
-        MediumPriorityBtn.TextColor = Color.FromArgb("#4B5563");
-        MediumPriorityBtn.BorderWidth = 0;
+        MediumPriorityBtn.BackgroundColor = Color.FromArgb("#F3F4F6");
+        MediumPriorityBtn.TextColor = Color.FromArgb("#374151");
 
-        // Apply "Selected" style based on choice
+        HighPriorityBtn.BackgroundColor = Color.FromArgb("#F3F4F6");
+        HighPriorityBtn.TextColor = Color.FromArgb("#374151");
+
         if (priority == "Low")
         {
-            LowPriorityBtn.BackgroundColor = Color.FromArgb("#F3F4F6");
-            LowPriorityBtn.BorderColor = Color.FromArgb("#D1D5DB");
-            LowPriorityBtn.BorderWidth = 1;
+            LowPriorityBtn.BackgroundColor = Color.FromArgb("#DBEAFE");
+            LowPriorityBtn.TextColor = Color.FromArgb("#1E40AF");
         }
         else if (priority == "Medium")
         {
-            MediumPriorityBtn.BackgroundColor = Color.FromArgb("#FEF9C3");
-            MediumPriorityBtn.TextColor = Color.FromArgb("#854D0E");
-            MediumPriorityBtn.BorderColor = Color.FromArgb("#FDE047");
-            MediumPriorityBtn.BorderWidth = 1;
+            MediumPriorityBtn.BackgroundColor = Color.FromArgb("#FEF3C7");
+            MediumPriorityBtn.TextColor = Color.FromArgb("#CA8A04");
         }
         else if (priority == "High")
         {
             HighPriorityBtn.BackgroundColor = Color.FromArgb("#FEE2E2");
             HighPriorityBtn.TextColor = Color.FromArgb("#991B1B");
-            HighPriorityBtn.BorderColor = Color.FromArgb("#FCA5A5");
-            HighPriorityBtn.BorderWidth = 1;
         }
     }
 
-    // Update your existing Submit method to show the details screen
     private async void OnSubmitTaskClicked(object sender, EventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(TaskTitleEntry.Text))
+        if (_selectedShift == null)
         {
-            await Application.Current.MainPage.DisplayAlert("Error", "Task title is required", "OK");
+            await ShowAlert("Error", "Please select a shift first.");
             return;
         }
 
-        // 1. Fill the Task Details view with the data just entered
-        ViewTaskTitle.Text = TaskTitleEntry.Text;
-        ViewTaskDescription.Text = TaskDescriptionEditor.Text;
-        ViewTaskPriority.Text = $"{_selectedTaskPriority.ToLower()} priority";
+        if (string.IsNullOrWhiteSpace(TaskTitleEntry.Text))
+        {
+            await ShowAlert("Error", "Task title is required.");
+            return;
+        }
 
-        // 2. Pull data from the currently selected shift (_selectedShift)
+        var task = new TaskModel
+        {
+            ShiftId = _selectedShift.Id,
+            Title = TaskTitleEntry.Text.Trim(),
+            Description = TaskDescriptionEditor.Text?.Trim() ?? "",
+            Priority = _selectedTaskPriority,
+            IsCompleted = false,
+            CreatedAt = DateTime.Now
+        };
+
+        await _databaseService.AddTaskAsync(task);
+
+        AddTaskOverlay.IsVisible = false;
+
+        await LoadShiftTasksAsync(_selectedShift);
+    }
+
+    private async Task LoadShiftTasksAsync(ShiftModel shift)
+    {
+        var tasks = await _databaseService.GetTasksByShiftIdAsync(shift.Id);
+
+        int completed = tasks.Count(t => t.IsCompleted);
+        int total = tasks.Count;
+
+        TaskCountLabel.Text = $"{completed}/{total} completed";
+
+        if (tasks.Count > 0)
+        {
+            var firstTask = tasks
+                .OrderBy(t => t.IsCompleted)
+                .ThenByDescending(t => t.CreatedAt)
+                .First();
+
+            _selectedTask = firstTask;
+
+            TaskTitleLabel.Text = firstTask.Title;
+            TaskPriorityLabel.Text = firstTask.Priority.ToLower();
+
+            TaskPriorityBadge.BackgroundColor = firstTask.Priority switch
+            {
+                "High" => Color.FromArgb("#FEE2E2"),
+                "Medium" => Color.FromArgb("#FEF3C7"),
+                "Low" => Color.FromArgb("#DBEAFE"),
+                _ => Color.FromArgb("#F3F4F6")
+            };
+
+            TaskPriorityLabel.TextColor = firstTask.Priority switch
+            {
+                "High" => Color.FromArgb("#991B1B"),
+                "Medium" => Color.FromArgb("#CA8A04"),
+                "Low" => Color.FromArgb("#1E40AF"),
+                _ => Color.FromArgb("#374151")
+            };
+        }
+        else
+        {
+            _selectedTask = null;
+
+            TaskTitleLabel.Text = "No tasks yet";
+            TaskPriorityLabel.Text = "-";
+            TaskPriorityBadge.BackgroundColor = Color.FromArgb("#F3F4F6");
+            TaskPriorityLabel.TextColor = Color.FromArgb("#6B7280");
+
+            TaskCountLabel.Text = "0/0 completed";
+        }
+    }
+
+    private void ShowTaskDetails(TaskModel task)
+    {
+        _selectedTask = task;
+
+        ViewTaskTitle.Text = task.Title;
+        ViewTaskDescription.Text = string.IsNullOrWhiteSpace(task.Description)
+            ? "No description provided."
+            : task.Description;
+
+        ViewTaskPriority.Text = $"{task.Priority.ToLower()} priority";
+
         if (_selectedShift != null)
         {
             ViewTaskDue.Text = $"🕒 Due: {_selectedShift.Date:MMM d}, {FormatTime(_selectedShift.EndTime)}";
-            ViewAssignedStaff.Text = _selectedShift.Employee;
-            ViewShiftTime.Text = $"{_selectedShift.Date:ddd, MMM d} , {FormatTime(_selectedShift.StartTime)} - {FormatTime(_selectedShift.EndTime)}";
+            ViewAssignedStaff.Text =
+                string.IsNullOrWhiteSpace(_selectedShift.Employee)
+                    ? "Unassigned"
+                    : _selectedShift.Employee;
+
+            ViewShiftTime.Text = $"{_selectedShift.Date:ddd, MMM d}, {FormatTime(_selectedShift.StartTime)} - {FormatTime(_selectedShift.EndTime)}";
             ViewLocation.Text = _selectedShift.Location;
             ViewStatus.Text = _selectedShift.Status;
         }
 
-        // 3. Close the Add Task Modal and open Task Details
-        AddTaskOverlay.IsVisible = false;
         TaskDetailsOverlay.IsVisible = true;
     }
 
-    // Handler for the Mark as Done button
-    private void OnMarkAsDoneClicked(object sender, EventArgs e)
+    private async void OnMarkAsDoneClicked(object sender, EventArgs e)
     {
-        // Close the details view and return to the main schedule interface
+        if (_selectedTask == null)
+            return;
+
+        _selectedTask.IsCompleted = true;
+        await _databaseService.UpdateTaskAsync(_selectedTask);
+
         TaskDetailsOverlay.IsVisible = false;
-        ShiftDetailsCard.IsVisible = false; // Optional: hide the shift card too
+
+        if (_selectedShift != null)
+            await LoadShiftTasksAsync(_selectedShift);
     }
 
-    // Back button handler
     private void OnCloseTaskDetailsClicked(object sender, EventArgs e)
     {
         TaskDetailsOverlay.IsVisible = false;
     }
 
-    private void OnTaskCheckedChanged(
-        object sender,
-        CheckedChangedEventArgs e)
+    private void OnTaskRowTapped(object sender, TappedEventArgs e)
     {
-        TaskCountLabel.Text =
-            e.Value
-                ? "1/1 completed"
-                : "0/1 completed";
+        if (_selectedTask != null)
+            ShowTaskDetails(_selectedTask);
     }
 
-    private async void OnAcceptClicked(
-        object sender,
-        EventArgs e)
+    private async void OnAcceptClicked(object sender, EventArgs e)
     {
         if (_selectedShift == null)
             return;
 
         _selectedShift.Status = "Accepted";
 
-        await _databaseService.UpdateShiftAsync(
-            _selectedShift);
+        await _databaseService.UpdateShiftAsync(_selectedShift);
 
         DetailsStatusLabel.Text = "Accepted";
+        DetailsStatusLabel.TextColor = Color.FromArgb("#16A34A");
 
-        DetailsStatusLabel.TextColor =
-            Color.FromArgb("#16A34A");
+        RenderWeek();
+        ShowShiftDetails(_selectedShift);
     }
 
-    private async void OnDeclineClicked(
-        object sender,
-        EventArgs e)
-        { 
+    private async void OnDeclineClicked(object sender, EventArgs e)
+    {
         if (_selectedShift == null)
             return;
 
         _selectedShift.Status = "Declined";
 
-        await _databaseService.UpdateShiftAsync(
-            _selectedShift);
+        await _databaseService.UpdateShiftAsync(_selectedShift);
 
         DetailsStatusLabel.Text = "Declined";
+        DetailsStatusLabel.TextColor = Color.FromArgb("#DC2626");
 
-        DetailsStatusLabel.TextColor =
-            Color.FromArgb("#DC2626");
+        RenderWeek();
+        ShowShiftDetails(_selectedShift);
     }
 
-    private static DateTime GetStartOfWeek(
-        DateTime date)
+    private async Task ShowAlert(string title, string message)
     {
-        int diff =
-            (7 + (date.DayOfWeek - DayOfWeek.Sunday))
-            % 7;
+        Page? page = Window?.Page ?? Application.Current?.Windows[0].Page;
 
+        if (page != null)
+            await page.DisplayAlert(title, message, "OK");
+    }
+
+    private static DateTime GetStartOfWeek(DateTime date)
+    {
+        int diff = (7 + (date.DayOfWeek - DayOfWeek.Sunday)) % 7;
         return date.AddDays(-diff).Date;
     }
 
-    private static string FormatTime(
-        TimeSpan time)
+    private static string FormatTime(TimeSpan time)
     {
-        return DateTime.Today
-            .Add(time)
-            .ToString("HH:mm");
+        return DateTime.Today.Add(time).ToString("HH:mm");
     }
 }

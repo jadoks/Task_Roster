@@ -4,155 +4,262 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="22,18,22,120" Spacing="20">
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="22,18,22,120" Spacing="20">
 
-            <Grid ColumnDefinitions="*,Auto">
-                <Label
-                    Text="My Schedule"
-                    FontSize="20"
-                    FontAttributes="Bold"
-                    TextColor="#111827" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label
+                        Text="My Schedule"
+                        FontSize="20"
+                        FontAttributes="Bold"
+                        TextColor="#111827" />
 
-                <Image
-                    Grid.Column="1"
-                    Source="bell.svg"
-                    WidthRequest="24"
-                    HeightRequest="24" />
-            </Grid>
+                    <Image
+                        Grid.Column="1"
+                        Source="bell.svg"
+                        WidthRequest="24"
+                        HeightRequest="24">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnNotificationTapped" />
+                        </Image.GestureRecognizers>
+                    </Image>
+                </Grid>
 
-            <VerticalStackLayout Spacing="2">
-                <Label
-                    x:Name="GreetingLabel"
-                    Text="Hi, Employee"
-                    FontSize="22"
-                    FontAttributes="Bold"
-                    TextColor="#111827" />
+                <VerticalStackLayout Spacing="2">
+                    <Label
+                        x:Name="GreetingLabel"
+                        Text="Hi, Employee"
+                        FontSize="22"
+                        FontAttributes="Bold"
+                        TextColor="#111827" />
 
-                <Label
-                    x:Name="DateLabel"
-                    Text=""
-                    FontSize="14"
-                    TextColor="#6B7280" />
-            </VerticalStackLayout>
-
-            <Label Text="Today's Shifts" FontSize="17" FontAttributes="Bold" TextColor="#111827" />
-
-            <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="18">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
-
-                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
-                    <Label Text="No shifts scheduled for today" FontSize="14" TextColor="#6B7280" HorizontalTextAlignment="Center" />
-                    <Label Text="Enjoy your day off!" FontSize="12" TextColor="#9CA3AF" HorizontalTextAlignment="Center" />
+                    <Label
+                        x:Name="DateLabel"
+                        Text=""
+                        FontSize="14"
+                        TextColor="#6B7280" />
                 </VerticalStackLayout>
-            </Border>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
-                <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="16">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="8" />
-                    </Border.StrokeShape>
+                <Label Text="Today's Shifts" FontSize="17" FontAttributes="Bold" TextColor="#111827" />
 
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                        <Border BackgroundColor="#E8F5EE" WidthRequest="36" HeightRequest="36">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="18" />
-                            </Border.StrokeShape>
-                            <Image Source="schedule.svg" WidthRequest="20" />
-                        </Border>
+                <VerticalStackLayout x:Name="TodayShiftsLayout" Spacing="10" />
 
-                        <VerticalStackLayout Grid.Column="1">
-                            <Label Text="This Week" FontSize="12" TextColor="#6B7280" />
-                            <Label Text="2 shifts" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
-                        </VerticalStackLayout>
-                    </Grid>
-                </Border>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
+                    <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="16">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
 
-                <Border Grid.Column="1" BackgroundColor="White" Stroke="#E5E7EB" Padding="16">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="8" />
-                    </Border.StrokeShape>
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Border BackgroundColor="#E8F5EE" WidthRequest="36" HeightRequest="36">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="18" />
+                                </Border.StrokeShape>
+                                <Image Source="schedule.svg" WidthRequest="20" />
+                            </Border>
 
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                        <Border BackgroundColor="#DCFCE7" WidthRequest="36" HeightRequest="36">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="18" />
-                            </Border.StrokeShape>
-                            <Image Source="check.svg" WidthRequest="20" />
-                        </Border>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="This Week" FontSize="12" TextColor="#6B7280" />
+                                <Label x:Name="WeekShiftCountLabel" Text="0 shifts" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
 
-                        <VerticalStackLayout Grid.Column="1">
-                            <Label Text="Tasks" FontSize="12" TextColor="#6B7280" />
-                            <Label Text="0/2" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
-                        </VerticalStackLayout>
-                    </Grid>
-                </Border>
-            </Grid>
+                    <Border Grid.Column="1" BackgroundColor="White" Stroke="#E5E7EB" Padding="16">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
 
-            <Label Text="Upcoming Shifts" FontSize="17" FontAttributes="Bold" TextColor="#111827" />
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Border BackgroundColor="#DCFCE7" WidthRequest="36" HeightRequest="36">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="18" />
+                                </Border.StrokeShape>
+                                <Image Source="check.svg" WidthRequest="20" />
+                            </Border>
 
-            <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="28">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="Tasks" FontSize="12" TextColor="#6B7280" />
+                                <Label x:Name="TaskSummaryLabel" Text="0/0" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+                </Grid>
 
-                <Label Text="No upcoming shifts scheduled" FontSize="14" TextColor="#6B7280" HorizontalTextAlignment="Center" />
-            </Border>
+                <Label Text="Upcoming Shifts" FontSize="17" FontAttributes="Bold" TextColor="#111827" />
 
-            <Grid ColumnDefinitions="*,Auto">
-                <Label Text="Tasks To Complete" FontSize="17" FontAttributes="Bold" TextColor="#111827" />
+                <VerticalStackLayout x:Name="UpcomingShiftsLayout" Spacing="10" />
 
-                <Border Grid.Column="1" BackgroundColor="#E8F5EE" WidthRequest="24" HeightRequest="24">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Tasks To Complete" FontSize="17" FontAttributes="Bold" TextColor="#111827" />
+
+                    <Border Grid.Column="1" BackgroundColor="#E8F5EE" WidthRequest="24" HeightRequest="24">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12" />
+                        </Border.StrokeShape>
+
+                        <Label
+                            x:Name="PendingTaskBadgeLabel"
+                            Text="0"
+                            FontSize="12"
+                            TextColor="{StaticResource PrimaryGreen}"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center" />
+                    </Border>
+                </Grid>
+
+                <VerticalStackLayout x:Name="TasksLayout" Spacing="10" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Task Details Overlay -->
+        <Grid
+            x:Name="TaskDetailsOverlay"
+            IsVisible="False"
+            BackgroundColor="#F5F6F8"
+            Padding="16">
+
+            <VerticalStackLayout Spacing="20">
+
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Button
+                        Text="←"
+                        BackgroundColor="Transparent"
+                        TextColor="#1F2937"
+                        FontSize="24"
+                        Clicked="OnCloseTaskDetailsClicked" />
+
+                    <Label
+                        Grid.Column="1"
+                        Text="Task Details"
+                        FontSize="18"
+                        FontAttributes="Bold"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center" />
+
+                    <Image
+                        Grid.Column="2"
+                        Source="bell.svg"
+                        WidthRequest="24" />
+                </Grid>
+
+                <Border BackgroundColor="White" StrokeThickness="0" Padding="20">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="12" />
                     </Border.StrokeShape>
 
-                    <Label Text="2" FontSize="12" TextColor="{StaticResource PrimaryGreen}" HorizontalOptions="Center" VerticalOptions="Center" />
+                    <VerticalStackLayout Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label
+                                x:Name="ViewTaskTitle"
+                                Text="Task Title"
+                                FontSize="18"
+                                FontAttributes="Bold" />
+
+                            <Border
+                                Grid.Column="1"
+                                BackgroundColor="#FEF9C3"
+                                Padding="8,4">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12" />
+                                </Border.StrokeShape>
+
+                                <Label
+                                    x:Name="ViewTaskPriority"
+                                    Text="medium priority"
+                                    TextColor="#854D0E"
+                                    FontSize="11" />
+                            </Border>
+                        </Grid>
+
+                        <Label
+                            x:Name="ViewTaskDue"
+                            Text="🕒 Due: -"
+                            TextColor="#6B7280"
+                            FontSize="13" />
+
+                        <BoxView HeightRequest="1" Color="#F3F4F6" Margin="0,5" />
+
+                        <Label
+                            x:Name="ViewTaskDescription"
+                            Text="No description provided."
+                            TextColor="#374151"
+                            FontSize="14" />
+                    </VerticalStackLayout>
                 </Border>
-            </Grid>
 
-            <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="16">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                <Border BackgroundColor="White" StrokeThickness="0" Padding="20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
 
-                <Grid ColumnDefinitions="*,Auto">
-                    <VerticalStackLayout Spacing="8">
-                        <Label Text="Clean store front" FontSize="15" TextColor="#111827" />
-                        <Label Text="Sweep and mop the entrance area" FontSize="13" TextColor="#6B7280" />
+                    <VerticalStackLayout Spacing="15">
+                        <Label Text="Details" FontSize="16" FontAttributes="Bold" />
+
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <Label Text="Assigned from:" TextColor="#6B7280" WidthRequest="105" />
+                            <Label
+                                x:Name="ViewAssignedFrom"
+                                Grid.Column="1"
+                                Text="Manager"
+                                FontAttributes="Bold"
+                                HorizontalOptions="End" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <Label Text="Shift:" TextColor="#6B7280" WidthRequest="105" />
+                            <Label
+                                x:Name="ViewShiftTime"
+                                Grid.Column="1"
+                                Text="-"
+                                FontAttributes="Bold" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <Label Text="Location:" TextColor="#6B7280" WidthRequest="105" />
+                            <Label
+                                x:Name="ViewLocation"
+                                Grid.Column="1"
+                                Text="-"
+                                FontAttributes="Bold"
+                                HorizontalOptions="End" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <Label Text="Status:" TextColor="#6B7280" WidthRequest="105" />
+                            <Label
+                                x:Name="ViewStatus"
+                                Grid.Column="1"
+                                Text="Pending"
+                                TextColor="#CA8A04"
+                                FontAttributes="Bold"
+                                HorizontalOptions="End" />
+                        </Grid>
                     </VerticalStackLayout>
+                </Border>
 
-                    <Border Grid.Column="1" BackgroundColor="#FEF3C7" Padding="10,5">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="14" />
-                        </Border.StrokeShape>
-                        <Label Text="medium" FontSize="11" TextColor="#B45309" />
-                    </Border>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="15">
+                    <Button
+                        Text="✓ Mark Complete"
+                        BackgroundColor="#16A34A"
+                        TextColor="White"
+                        HeightRequest="50"
+                        CornerRadius="8"
+                        Clicked="OnMarkAsDoneClicked" />
+
+                    <Button
+                        Grid.Column="1"
+                        Text="✕ Cancel"
+                        BackgroundColor="#F3F4F6"
+                        TextColor="#4B5563"
+                        HeightRequest="50"
+                        CornerRadius="8"
+                        Clicked="OnCloseTaskDetailsClicked" />
                 </Grid>
-            </Border>
 
-            <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="16">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
-
-                <Grid ColumnDefinitions="*,Auto">
-                    <VerticalStackLayout Spacing="8">
-                        <Label Text="Daily cash count" FontSize="15" TextColor="#111827" />
-                        <Label Text="Count the cash register and record totals" FontSize="13" TextColor="#6B7280" />
-                    </VerticalStackLayout>
-
-                    <Border Grid.Column="1" BackgroundColor="#FEE2E2" Padding="10,5">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="14" />
-                        </Border.StrokeShape>
-                        <Label Text="high" FontSize="11" TextColor="#DC2626" />
-                    </Border>
-                </Grid>
-            </Border>
-
-        </VerticalStackLayout>
-    </ScrollView>
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
 </ContentView>
