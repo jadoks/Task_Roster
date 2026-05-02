@@ -168,4 +168,9 @@ public class DatabaseService
             ReadAt = DateTime.Now
         });
     }
+
+    public async Task<List<TaskModel>> GetTasksAsync()
+    {
+        return await _database.Table<TaskModel>().ToListAsync();
+    }
 }

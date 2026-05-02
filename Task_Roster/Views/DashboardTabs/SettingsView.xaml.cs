@@ -1,8 +1,10 @@
 ﻿using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Dispatching;
+using System.Text;
 using Task_Roster.Models;
 using Task_Roster.Services;
 using Task_Roster.Views;
+using Microsoft.Maui.Storage;
 
 namespace Task_Roster.Views.DashboardTabs;
 
@@ -103,7 +105,7 @@ public partial class SettingsView : ContentView
                 count++;
 
             var tasks = await _databaseService.GetTasksByShiftIdAsync(shift.Id);
-            count += tasks.Count(t => t.IsCompleted);
+            count += tasks.Count(t => !t.IsCompleted);
         }
 
         return count;
@@ -211,17 +213,6 @@ public partial class SettingsView : ContentView
             return;
         }
 
-        if (newEmail != _currentEmail.ToLower())
-        {
-            UserModel? existingUser = await _databaseService.GetUserByEmailAsync(newEmail);
-
-            if (existingUser != null)
-            {
-                await ShowAlert("Email Already Exists", "This email is already used by another account.");
-                return;
-            }
-        }
-
         string[] nameParts = fullName.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
 
         currentUser.FirstName = nameParts.Length > 0 ? nameParts[0] : "";
@@ -266,144 +257,214 @@ public partial class SettingsView : ContentView
         ModalOverlay.IsVisible = false;
     }
 
-    private void OnImportDataClicked(object sender, EventArgs e)
+    // =========================
+    // IMPORT DATA
+    // =========================
+
+    private async void OnImportDataClicked(object sender, EventArgs e)
     {
-        var picker = new Picker
+        try
         {
-            ItemsSource = new string[] { "Employees", "Schedules", "Tasks" },
-            SelectedIndex = 0
-        };
-
-        var content = new VerticalStackLayout
-        {
-            Spacing = 16,
-            Children =
+            FileResult? file = await FilePicker.Default.PickAsync(new PickOptions
             {
-                new Label
-                {
-                    Text = "Select Data Type",
-                    FontSize = 14,
-                    TextColor = Color.FromArgb("#374151")
-                },
+                PickerTitle = "Select CSV File"
+            });
 
-                picker,
+            if (file == null)
+                return;
 
-                new Border
-                {
-                    BackgroundColor = Color.FromArgb("#DCFCE7"),
-                    Stroke = Color.FromArgb("#16A34A"),
-                    Padding = 12,
-                    StrokeShape = new RoundRectangle { CornerRadius = 6 },
-                    Content = new Label
-                    {
-                        Text = "CSV Format Required:\nColumns: Name, Email, Skills, MaxHours",
-                        FontSize = 12,
-                        TextColor = Color.FromArgb("#166534")
-                    }
-                },
+            using Stream stream = await file.OpenReadAsync();
+            using StreamReader reader = new(stream);
 
-                new Button
-                {
-                    Text = "Choose File",
-                    BackgroundColor = Color.FromArgb("#16A34A"),
-                    TextColor = Colors.White,
-                    CornerRadius = 6,
-                    HeightRequest = 52
-                }
+            string csv = await reader.ReadToEndAsync();
+
+            string[] rows = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+            if (rows.Length <= 1)
+            {
+                await ShowAlert("Import Error", "CSV file is empty.");
+                return;
             }
-        };
 
-        ShowModal("Import Data", content);
+            int importedCount = 0;
+
+            // Skip header row
+            for (int i = 1; i < rows.Length; i++)
+            {
+                string[] columns = rows[i].Split(',');
+
+                if (columns.Length < 3)
+                    continue;
+
+                ShiftModel shift = new()
+                {
+                    Employee = columns[0].Trim(),
+                    Status = columns[1].Trim(),
+                    Date = DateTime.TryParse(columns[2], out DateTime date)
+                        ? date
+                        : DateTime.Now
+                };
+
+                await _databaseService.AddShiftAsync(shift);
+
+                importedCount++;
+            }
+
+            await ShowAlert(
+                "Import Successful",
+                $"Successfully imported {importedCount} records into SQLite database.");
+        }
+        catch (Exception ex)
+        {
+            await ShowAlert("Import Error", ex.Message);
+        }
     }
 
-    private void OnExportDataClicked(object sender, EventArgs e)
-    {
-        var content = new VerticalStackLayout
-        {
-            Spacing = 12,
-            Children =
-            {
-                CreateExportCard("Export as CSV", "Multiple files for spreadsheet software", "#DCFCE7"),
-                CreateExportCard("Export as PDF", "Single formatted document", "#FEE2E2")
-            }
-        };
+    // =========================
+    // EXPORT DATA
+    // =========================
 
-        ShowModal("Choose Export Format", content);
+    private async void OnExportDataClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var shifts = await _databaseService.GetShiftsAsync();
+            var tasks = await _databaseService.GetTasksAsync();
+
+            StringBuilder builder = new();
+
+            builder.AppendLine("=== SHIFTS ===");
+            builder.AppendLine("Employee,Status,Date");
+
+            foreach (var shift in shifts)
+            {
+                builder.AppendLine(
+                    $"{shift.Employee},{shift.Status},{shift.Date:yyyy-MM-dd}");
+            }
+
+            builder.AppendLine();
+            builder.AppendLine("=== TASKS ===");
+            builder.AppendLine("Title,Completed");
+
+            foreach (var task in tasks)
+            {
+                builder.AppendLine(
+                    $"{task.Title},{task.IsCompleted}");
+            }
+
+            string fileName =
+                $"TaskRoster_Backup_{DateTime.Now:yyyyMMddHHmmss}.csv";
+
+            string filePath =
+                System.IO.Path.Combine(FileSystem.CacheDirectory, fileName);
+
+            File.WriteAllText(filePath, builder.ToString());
+
+            await Share.Default.RequestAsync(new ShareFileRequest
+            {
+                Title = "Export Database Backup",
+                File = new ShareFile(filePath)
+            });
+
+            await ShowAlert(
+                "Export Successful",
+                "SQLite database exported successfully.");
+        }
+        catch (Exception ex)
+        {
+            await ShowAlert("Export Error", ex.Message);
+        }
     }
 
-    private View CreateExportCard(string title, string desc, string bgColor)
-    {
-        return new Border
-        {
-            BackgroundColor = Colors.White,
-            Stroke = Color.FromArgb("#E5E7EB"),
-            Padding = 16,
-            StrokeShape = new RoundRectangle { CornerRadius = 8 },
-            Content = new Grid
-            {
-                ColumnDefinitions =
-                {
-                    new ColumnDefinition { Width = GridLength.Auto },
-                    new ColumnDefinition()
-                },
-                ColumnSpacing = 14,
-                Children =
-                {
-                    new Border
-                    {
-                        WidthRequest = 38,
-                        HeightRequest = 38,
-                        BackgroundColor = Color.FromArgb(bgColor),
-                        StrokeThickness = 0,
-                        StrokeShape = new RoundRectangle { CornerRadius = 19 },
-                        Content = new Label
-                        {
-                            HorizontalOptions = LayoutOptions.Center,
-                            VerticalOptions = LayoutOptions.Center
-                        }
-                    },
-
-                    CreateExportTextStack(title, desc)
-                }
-            }
-        };
-    }
-
-    private View CreateExportTextStack(string title, string desc)
-    {
-        var stack = new VerticalStackLayout
-        {
-            Spacing = 3,
-            Children =
-            {
-                new Label
-                {
-                    Text = title,
-                    FontSize = 14,
-                    FontAttributes = FontAttributes.Bold,
-                    TextColor = Color.FromArgb("#111827")
-                },
-                new Label
-                {
-                    Text = desc,
-                    FontSize = 12,
-                    TextColor = Color.FromArgb("#6B7280")
-                }
-            }
-        };
-
-        Grid.SetColumn(stack, 1);
-        return stack;
-    }
+    // =========================
+    // ANALYTICS / REPORTS
+    // =========================
 
     private async void OnReportsClicked(object sender, EventArgs e)
     {
-        Page? page = Window?.Page ?? Application.Current?.Windows[0].Page;
-
-        if (page != null)
+        try
         {
-            await page.Navigation.PushAsync(new ReportsPage());
+            var shifts = await _databaseService.GetShiftsAsync();
+
+            int totalShifts = shifts.Count;
+            int pendingShifts = shifts.Count(s => s.Status == "Pending");
+            int approvedShifts = shifts.Count(s => s.Status == "Approved");
+            int unassignedShifts = shifts.Count(s =>
+                string.IsNullOrWhiteSpace(s.Employee) ||
+                s.Employee == "-- Unassigned --");
+
+            int totalTasks = 0;
+            int completedTasks = 0;
+
+            foreach (var shift in shifts)
+            {
+                var tasks = await _databaseService.GetTasksByShiftIdAsync(shift.Id);
+
+                totalTasks += tasks.Count;
+                completedTasks += tasks.Count(t => t.IsCompleted);
+            }
+
+            double completionRate = 0;
+
+            if (totalTasks > 0)
+            {
+                completionRate = (double)completedTasks / totalTasks * 100;
+            }
+
+            var content = new VerticalStackLayout
+            {
+                Spacing = 14,
+                Children =
+                {
+                    CreateAnalyticsCard("Total Shifts", totalShifts.ToString(), "#DBEAFE"),
+                    CreateAnalyticsCard("Pending Shifts", pendingShifts.ToString(), "#FEF3C7"),
+                    CreateAnalyticsCard("Approved Shifts", approvedShifts.ToString(), "#DCFCE7"),
+                    CreateAnalyticsCard("Unassigned Shifts", unassignedShifts.ToString(), "#FEE2E2"),
+                    CreateAnalyticsCard("Total Tasks", totalTasks.ToString(), "#EDE9FE"),
+                    CreateAnalyticsCard("Completed Tasks", completedTasks.ToString(), "#DCFCE7"),
+                    CreateAnalyticsCard("Completion Rate", $"{completionRate:F1}%", "#DBEAFE")
+                }
+            };
+
+            ShowModal("Reports & Analytics", content);
         }
+        catch (Exception ex)
+        {
+            await ShowAlert("Analytics Error", ex.Message);
+        }
+    }
+
+    private View CreateAnalyticsCard(string title, string value, string bgColor)
+    {
+        return new Border
+        {
+            BackgroundColor = Color.FromArgb(bgColor),
+            StrokeThickness = 0,
+            Padding = 16,
+            StrokeShape = new RoundRectangle { CornerRadius = 8 },
+
+            Content = new VerticalStackLayout
+            {
+                Spacing = 4,
+                Children =
+                {
+                    new Label
+                    {
+                        Text = title,
+                        FontSize = 13,
+                        TextColor = Color.FromArgb("#6B7280")
+                    },
+
+                    new Label
+                    {
+                        Text = value,
+                        FontSize = 26,
+                        FontAttributes = FontAttributes.Bold,
+                        TextColor = Color.FromArgb("#111827")
+                    }
+                }
+            }
+        };
     }
 
     private void OnHelpCenterClicked(object sender, EventArgs e)
@@ -414,18 +475,16 @@ public partial class SettingsView : ContentView
             Children =
             {
                 SectionTitle("Getting Started"),
-                BodyText("TaskRoster makes it easy to manage your team's schedules and tasks. Start by checking your upcoming shifts and assigned tasks on the dashboard."),
+                BodyText("TaskRoster makes it easy to manage schedules and tasks."),
 
                 SectionTitle("Managing Shifts"),
-                BodyText("You can view all your shifts in the Shifts tab. Accept or decline shifts by tapping on them and using the action buttons."),
+                BodyText("View, assign, and manage employee shifts."),
 
-                SectionTitle("Completing Tasks"),
-                BodyText("Tasks can be marked as complete from the task details page. High priority tasks are highlighted in red for your attention."),
+                SectionTitle("Task Management"),
+                BodyText("Track tasks and monitor completion progress."),
 
                 SectionTitle("Notifications"),
-                BodyText("You'll receive notifications about new shifts, tasks, and updates. Customize your notification preferences in the settings."),
-
-                BodyText("Need more help? Contact our support team for assistance.")
+                BodyText("Receive updates for tasks and schedules.")
             }
         };
 
@@ -456,19 +515,7 @@ public partial class SettingsView : ContentView
                     HorizontalTextAlignment = TextAlignment.Center
                 },
 
-                BodyText("TaskRoster is a comprehensive employee scheduling and task management application designed to streamline workforce operations for businesses of all sizes."),
-
-                new Label
-                {
-                    Text = "Key Features:",
-                    FontSize = 14,
-                    FontAttributes = FontAttributes.Bold,
-                    TextColor = Color.FromArgb("#111827")
-                },
-
-                BodyText("• Intuitive shift scheduling and management\n• Task assignment and tracking\n• Employee availability management\n• Real-time notifications and updates\n• Comprehensive reporting and analytics"),
-
-                BodyText("© 2025 TaskRoster. All rights reserved.")
+                BodyText("TaskRoster is an employee scheduling and task management application.")
             }
         };
 
