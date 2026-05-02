@@ -291,10 +291,17 @@ public partial class ScheduleView : ContentView
             return;
         }
 
+<<<<<<< HEAD
         await _databaseService.AddShiftAsync(_pendingShift);
         LoadManagerNotificationBadge();
+=======
+        int newId = await _databaseService.AddShiftAsync(_pendingShift);
+
+        _pendingShift.Id = newId; // ✅ FIX
+>>>>>>> ad86ef551aa453863ba8074fdace87da1db19185
 
         _selectedShift = _pendingShift;
+
         ConfirmOverlay.IsVisible = false;
 
         RenderWeek();

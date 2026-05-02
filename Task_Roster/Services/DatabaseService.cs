@@ -32,122 +32,112 @@ public class DatabaseService
                 "ALTER TABLE UserModel ADD COLUMN ProfileImageBytes BLOB"
             ).Wait();
         }
-        catch
-        {
-            // Column already exists.
-        }
+        catch { }
     }
+
+    // ---------------- USERS ----------------
 
     public async Task<int> AddUserAsync(UserModel user)
-    {
-        return await _database.InsertAsync(user);
-    }
+        => await _database.InsertAsync(user);
 
     public async Task<UserModel?> GetUserByEmailAsync(string email)
-    {
-        return await _database.Table<UserModel>()
+        => await _database.Table<UserModel>()
             .Where(u => u.Email == email)
             .FirstOrDefaultAsync();
-    }
 
     public async Task<List<UserModel>> GetUsersAsync()
-    {
-        return await _database.Table<UserModel>()
-            .ToListAsync();
-    }
+        => await _database.Table<UserModel>().ToListAsync();
 
     public async Task<int> UpdateUserAsync(UserModel user)
-    {
-        return await _database.UpdateAsync(user);
-    }
+        => await _database.UpdateAsync(user);
 
-    public async Task<UserModel?> LoginUserAsync(
-        string email,
-        string password)
-    {
-        return await _database.Table<UserModel>()
-            .Where(u =>
-                u.Email == email &&
-                u.Password == password)
+    public async Task<UserModel?> LoginUserAsync(string email, string password)
+        => await _database.Table<UserModel>()
+            .Where(u => u.Email == email && u.Password == password)
             .FirstOrDefaultAsync();
-    }
 
-    public async Task<int> UpdatePasswordAsync(
-        string email,
-        string newPassword)
+    public async Task<int> UpdatePasswordAsync(string email, string newPassword)
     {
         var user = await GetUserByEmailAsync(email);
-
-        if (user == null)
-            return 0;
+        if (user == null) return 0;
 
         user.Password = newPassword;
-
         return await _database.UpdateAsync(user);
     }
 
-    public async Task AddShiftAsync(ShiftModel shift)
+    // ---------------- SHIFTS ----------------
+
+    public async Task<int> AddShiftAsync(ShiftModel shift)
     {
         await _database.InsertAsync(shift);
+        return shift.Id; // IMPORTANT FIX
     }
 
     public async Task<List<ShiftModel>> GetShiftsAsync()
-    {
-        return await _database.Table<ShiftModel>()
-            .ToListAsync();
-    }
+        => await _database.Table<ShiftModel>().ToListAsync();
 
-    public async Task UpdateShiftAsync(ShiftModel shift)
-    {
-        await _database.UpdateAsync(shift);
-    }
+    public async Task<int> UpdateShiftAsync(ShiftModel shift)
+        => await _database.UpdateAsync(shift);
 
-    public async Task DeleteShiftAsync(ShiftModel shift)
+    public async Task<int> DeleteShiftAsync(ShiftModel shift)
+        => await _database.DeleteAsync(shift);
+
+    // Delete shift WITH tasks
+    public async Task DeleteShiftWithTasksAsync(ShiftModel shift)
     {
+        var tasks = await GetTasksByShiftIdAsync(shift.Id);
+
+        foreach (var task in tasks)
+            await _database.DeleteAsync(task);
+
         await _database.DeleteAsync(shift);
     }
 
+    // ---------------- EMPLOYEES ----------------
+
     public async Task AddEmployeeAsync(EmployeeModel employee)
-    {
-        await _database.InsertAsync(employee);
-    }
+        => await _database.InsertAsync(employee);
 
     public async Task<List<EmployeeModel>> GetEmployeesAsync()
-    {
-        return await _database.Table<EmployeeModel>()
-            .ToListAsync();
-    }
+        => await _database.Table<EmployeeModel>().ToListAsync();
 
     public async Task UpdateEmployeeAsync(EmployeeModel employee)
-    {
-        await _database.UpdateAsync(employee);
-    }
+        => await _database.UpdateAsync(employee);
 
     public async Task DeleteEmployeeAsync(EmployeeModel employee)
-    {
-        await _database.DeleteAsync(employee);
-    }
+        => await _database.DeleteAsync(employee);
+
+    // ---------------- TASKS ----------------
 
     public async Task<int> AddTaskAsync(TaskModel task)
-    {
-        return await _database.InsertAsync(task);
-    }
+        => await _database.InsertAsync(task);
 
     public async Task<List<TaskModel>> GetTasksByShiftIdAsync(int shiftId)
-    {
-        return await _database.Table<TaskModel>()
+        => await _database.Table<TaskModel>()
             .Where(t => t.ShiftId == shiftId)
             .ToListAsync();
-    }
 
     public async Task<int> UpdateTaskAsync(TaskModel task)
-    {
-        return await _database.UpdateAsync(task);
-    }
+        => await _database.UpdateAsync(task);
 
     public async Task<int> DeleteTaskAsync(TaskModel task)
+        => await _database.DeleteAsync(task);
+
+    // ---------------- SHIFT DETAILS ----------------
+
+    public async Task<ShiftDetailsDto> GetShiftDetailsAsync(int shiftId)
     {
-        return await _database.DeleteAsync(task);
+        var shift = await _database.Table<ShiftModel>()
+            .Where(s => s.Id == shiftId)
+            .FirstOrDefaultAsync();
+
+        var tasks = await GetTasksByShiftIdAsync(shiftId);
+
+        return new ShiftDetailsDto
+        {
+            Shift = shift,
+            Tasks = tasks
+        };
     }
 
     public async Task<List<NotificationReadModel>> GetNotificationReadsByUserAsync(string userEmail)
