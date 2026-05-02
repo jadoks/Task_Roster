@@ -2,6 +2,7 @@
 using Microsoft.Maui.Controls.Shapes;
 using Task_Roster.Models;
 using Task_Roster.Services;
+using Task_Roster.Views;
 
 namespace Task_Roster.Views.DashboardTabs;
 
@@ -30,6 +31,7 @@ public partial class ScheduleView : ContentView
 
         LoadEmployees();
         RenderWeek();
+        LoadManagerNotificationBadge();
     }
 
     private async void LoadEmployees()
@@ -290,6 +292,7 @@ public partial class ScheduleView : ContentView
         }
 
         await _databaseService.AddShiftAsync(_pendingShift);
+        LoadManagerNotificationBadge();
 
         _selectedShift = _pendingShift;
         ConfirmOverlay.IsVisible = false;
@@ -522,6 +525,7 @@ public partial class ScheduleView : ContentView
         };
 
         await _databaseService.AddTaskAsync(task);
+        LoadManagerNotificationBadge();
 
         AddTaskOverlay.IsVisible = false;
 
@@ -638,6 +642,7 @@ public partial class ScheduleView : ContentView
         _selectedShift.Status = "Accepted";
 
         await _databaseService.UpdateShiftAsync(_selectedShift);
+        LoadManagerNotificationBadge();
 
         DetailsStatusLabel.Text = "Accepted";
         DetailsStatusLabel.TextColor = Color.FromArgb("#16A34A");
@@ -654,12 +659,60 @@ public partial class ScheduleView : ContentView
         _selectedShift.Status = "Declined";
 
         await _databaseService.UpdateShiftAsync(_selectedShift);
+        LoadManagerNotificationBadge();
 
         DetailsStatusLabel.Text = "Declined";
         DetailsStatusLabel.TextColor = Color.FromArgb("#DC2626");
 
         RenderWeek();
         ShowShiftDetails(_selectedShift);
+    }
+
+
+    public void OpenAddShiftFromQuickAction()
+    {
+        ShiftDatePicker.Date = DateTime.Today;
+        ShiftDatePicker.MinimumDate = DateTime.Today;
+        OpenAddShiftModal();
+    }
+
+    private async void LoadManagerNotificationBadge()
+    {
+        int count = await GetManagerNotificationCountAsync();
+
+        ManagerNotificationBadge.IsVisible = count > 0;
+        ManagerNotificationBadgeLabel.Text = count > 99 ? "99+" : count.ToString();
+    }
+
+    private async Task<int> GetManagerNotificationCountAsync()
+    {
+        int count = 0;
+        var shifts = await _databaseService.GetShiftsAsync();
+
+        foreach (var shift in shifts)
+        {
+            if (shift.Status == "Pending")
+                count++;
+
+            if (string.IsNullOrWhiteSpace(shift.Employee) || shift.Employee == "-- Unassigned --")
+                count++;
+
+            var tasks = await _databaseService.GetTasksByShiftIdAsync(shift.Id);
+            count += tasks.Count(t => t.IsCompleted);
+        }
+
+        return count;
+    }
+
+    private async void OnBellTapped(object sender, TappedEventArgs e)
+    {
+        Page? page = Window?.Page ?? Application.Current?.Windows[0].Page;
+
+        if (page != null)
+        {
+            await page.Navigation.PushModalAsync(new ManagerNotification());
+            LoadManagerNotificationBadge();
+        }
     }
 
     private async Task ShowAlert(string title, string message)

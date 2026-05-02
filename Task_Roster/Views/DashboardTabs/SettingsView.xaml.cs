@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Dispatching;
 using Task_Roster.Models;
 using Task_Roster.Services;
 using Task_Roster.Views;
@@ -8,6 +9,7 @@ namespace Task_Roster.Views.DashboardTabs;
 public partial class SettingsView : ContentView
 {
     private readonly DatabaseService _databaseService;
+    private IDispatcherTimer? _badgeTimer;
 
     private string _currentEmail = "";
     private byte[]? _selectedProfileImageBytes;
@@ -19,6 +21,7 @@ public partial class SettingsView : ContentView
         _databaseService = new DatabaseService();
 
         LoadCurrentUser();
+        StartNotificationAutoRefresh();
     }
 
     private async void LoadCurrentUser()
@@ -49,6 +52,72 @@ public partial class SettingsView : ContentView
         EditProfileInitialsLabel.Text = initials;
 
         SetProfileImage(user.ProfileImageBytes);
+
+        await RefreshNotificationBadge();
+    }
+
+    private void StartNotificationAutoRefresh()
+    {
+        _badgeTimer?.Stop();
+
+        _badgeTimer = Dispatcher.CreateTimer();
+        _badgeTimer.Interval = TimeSpan.FromSeconds(5);
+
+        _badgeTimer.Tick += async (_, _) =>
+        {
+            await RefreshNotificationBadge();
+        };
+
+        _badgeTimer.Start();
+    }
+
+    private async Task RefreshNotificationBadge()
+    {
+        int count = await GetNotificationCount();
+
+        bool visible = count > 0;
+        string text = count > 99 ? "99+" : count.ToString();
+
+        MainNotificationBadge.IsVisible = visible;
+        EditNotificationBadge.IsVisible = visible;
+        PrefsNotificationBadge.IsVisible = visible;
+
+        MainNotificationBadgeLabel.Text = text;
+        EditNotificationBadgeLabel.Text = text;
+        PrefsNotificationBadgeLabel.Text = text;
+    }
+
+    private async Task<int> GetNotificationCount()
+    {
+        int count = 0;
+
+        var shifts = await _databaseService.GetShiftsAsync();
+
+        foreach (var shift in shifts)
+        {
+            if (shift.Status == "Pending")
+                count++;
+
+            if (string.IsNullOrWhiteSpace(shift.Employee) ||
+                shift.Employee == "-- Unassigned --")
+                count++;
+
+            var tasks = await _databaseService.GetTasksByShiftIdAsync(shift.Id);
+            count += tasks.Count(t => t.IsCompleted);
+        }
+
+        return count;
+    }
+
+    private async void OnBellTapped(object sender, TappedEventArgs e)
+    {
+        Page? page = Window?.Page ?? Application.Current?.Windows[0].Page;
+
+        if (page != null)
+        {
+            await page.Navigation.PushModalAsync(new ManagerNotification());
+            await RefreshNotificationBadge();
+        }
     }
 
     private void SetProfileImage(byte[]? imageBytes)
@@ -155,7 +224,7 @@ public partial class SettingsView : ContentView
 
         string[] nameParts = fullName.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
 
-        currentUser.FirstName = nameParts[0];
+        currentUser.FirstName = nameParts.Length > 0 ? nameParts[0] : "";
         currentUser.LastName = nameParts.Length > 1 ? nameParts[1] : "";
         currentUser.Email = newEmail;
         currentUser.ProfileImageBytes = _selectedProfileImageBytes;
@@ -413,6 +482,8 @@ public partial class SettingsView : ContentView
         if (!confirm)
             return;
 
+        _badgeTimer?.Stop();
+
         Preferences.Set("IsLoggedIn", false);
         Preferences.Remove("UserRole");
         Preferences.Remove("UserName");
@@ -455,7 +526,7 @@ public partial class SettingsView : ContentView
 
     private async Task ShowAlert(string title, string message)
     {
-        Page? page = Window?.Page;
+        Page? page = Window?.Page ?? Application.Current?.Windows[0].Page;
 
         if (page != null)
         {
@@ -465,7 +536,7 @@ public partial class SettingsView : ContentView
 
     private async Task<bool> ShowConfirm(string title, string message)
     {
-        Page? page = Window?.Page;
+        Page? page = Window?.Page ?? Application.Current?.Windows[0].Page;
 
         if (page != null)
         {

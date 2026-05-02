@@ -17,11 +17,40 @@
                            TextColor="#1F2937"
                            VerticalOptions="Center" />
 
-                    <Image Grid.Column="1"
-                           Source="bell.svg"
-                           WidthRequest="22"
-                           HeightRequest="22"
-                           VerticalOptions="Center" />
+                    <Grid Grid.Column="1" WidthRequest="30" HeightRequest="30">
+                        <Image
+                            Source="bell.svg"
+                            WidthRequest="22"
+                            HeightRequest="22"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBellTapped" />
+                            </Image.GestureRecognizers>
+                        </Image>
+
+                        <Border
+                            x:Name="ManagerNotificationBadge"
+                            IsVisible="False"
+                            BackgroundColor="#DC2626"
+                            WidthRequest="17"
+                            HeightRequest="17"
+                            StrokeThickness="0"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="9" />
+                            </Border.StrokeShape>
+
+                            <Label
+                                x:Name="ManagerNotificationBadgeLabel"
+                                Text="0"
+                                FontSize="9"
+                                TextColor="White"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center" />
+                        </Border>
+                    </Grid>
                 </Grid>
 
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">

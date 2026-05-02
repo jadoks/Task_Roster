@@ -4,7 +4,6 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit">
-    
 
     <ScrollView BackgroundColor="#F5F6F8">
         <VerticalStackLayout Padding="16,18,16,24" Spacing="20">
@@ -18,18 +17,47 @@
                     TextColor="#1F2937"
                     VerticalOptions="Center" />
 
-                <Image
-                    Grid.Column="1"
-                    Source="bell.svg"
-                    WidthRequest="22"
-                    HeightRequest="22"
-                    VerticalOptions="Center" />
+                <Grid Grid.Column="1" WidthRequest="30" HeightRequest="30">
+                    <Image
+                        Source="bell.svg"
+                        WidthRequest="22"
+                        HeightRequest="22"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnBellTapped" />
+                        </Image.GestureRecognizers>
+                    </Image>
+
+                    <Border
+                        x:Name="ManagerNotificationBadge"
+                        IsVisible="False"
+                        BackgroundColor="#DC2626"
+                        WidthRequest="17"
+                        HeightRequest="17"
+                        StrokeThickness="0"
+                        HorizontalOptions="End"
+                        VerticalOptions="Start">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="9" />
+                        </Border.StrokeShape>
+
+                        <Label
+                            x:Name="ManagerNotificationBadgeLabel"
+                            Text="0"
+                            FontSize="9"
+                            TextColor="White"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center" />
+                    </Border>
+                </Grid>
             </Grid>
 
             <!-- Date Row -->
             <Grid ColumnDefinitions="*,Auto">
                 <Label
-                    Text="Tue, Sep 16"
+                    x:Name="TodayDateLabel"
+                    Text="Today"
                     FontSize="15"
                     FontAttributes="Bold"
                     TextColor="#1F2937"
@@ -77,12 +105,11 @@
                             </Border.StrokeShape>
 
                             <Image Source="schedule.svg" WidthRequest="18" HeightRequest="18" />
-                            
                         </Border>
 
                         <VerticalStackLayout Grid.Column="1" Spacing="2">
                             <Label Text="Pending Shifts" FontSize="11" TextColor="#6B7280" />
-                            <Label Text="2" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
+                            <Label x:Name="PendingShiftsLabel" Text="0" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
@@ -109,7 +136,7 @@
 
                         <VerticalStackLayout Grid.Column="1" Spacing="2">
                             <Label Text="Unassigned" FontSize="11" TextColor="#6B7280" />
-                            <Label Text="0" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
+                            <Label x:Name="UnassignedLabel" Text="0" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
@@ -136,7 +163,7 @@
 
                         <VerticalStackLayout Grid.Column="1" Spacing="2">
                             <Label Text="Tasks Done" FontSize="11" TextColor="#6B7280" />
-                            <Label Text="0/5" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
+                            <Label x:Name="TasksDoneLabel" Text="0/0" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
@@ -163,7 +190,7 @@
 
                         <VerticalStackLayout Grid.Column="1" Spacing="2">
                             <Label Text="Staff Today" FontSize="11" TextColor="#6B7280" />
-                            <Label Text="0" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
+                            <Label x:Name="StaffTodayLabel" Text="0" FontSize="16" FontAttributes="Bold" TextColor="#111827" />
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
@@ -179,6 +206,10 @@
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                 <Border BackgroundColor="White" Padding="14" Stroke="#E5E7EB">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCreateScheduleTapped" />
+                    </Border.GestureRecognizers>
+
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
@@ -190,6 +221,10 @@
                 </Border>
 
                 <Border Grid.Column="1" BackgroundColor="White" Padding="14" Stroke="#E5E7EB">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnManageTeamTapped" />
+                    </Border.GestureRecognizers>
+
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
@@ -208,27 +243,7 @@
                 FontAttributes="Bold"
                 TextColor="#1F2937" />
 
-            <Border BackgroundColor="White" Padding="20" Stroke="#E5E7EB">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
-
-                <VerticalStackLayout Spacing="16" HorizontalOptions="Center">
-                    <Label
-                        Text="No shifts scheduled for today"
-                        FontSize="12"
-                        TextColor="#6B7280"
-                        HorizontalTextAlignment="Center" />
-
-                    <Button
-                        Text="Create Shifts"
-                        BackgroundColor="#2563EB"
-                        TextColor="White"
-                        FontSize="12"
-                        CornerRadius="6"
-                        Padding="18,8" />
-                </VerticalStackLayout>
-            </Border>
+            <VerticalStackLayout x:Name="TodayScheduleLayout" Spacing="10" />
 
         </VerticalStackLayout>
     </ScrollView>

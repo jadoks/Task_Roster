@@ -90,6 +90,9 @@
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Views\LoadingPage.xaml" Generator="MSBuild:Compile" />
+		<MauiXaml Update="Views\ManagerNotification.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Views\ReportsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

@@ -2,6 +2,7 @@ using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Layouts;
 using Task_Roster.Models;
 using Task_Roster.Services;
+using Task_Roster.Views;
 
 namespace Task_Roster.Views.DashboardTabs;
 
@@ -24,6 +25,7 @@ public partial class TeamView : ContentView
         UpdateDayTimeVisibility();
 
         LoadEmployees();
+        LoadManagerNotificationBadge();
     }
 
     private async void LoadEmployees()
@@ -373,6 +375,7 @@ public partial class TeamView : ContentView
             return;
 
         await _databaseService.AddEmployeeAsync(_pendingEmployee);
+        LoadManagerNotificationBadge();
 
         _employees.Add(_pendingEmployee);
 
@@ -472,6 +475,51 @@ public partial class TeamView : ContentView
         UpdateDayTimeVisibility();
 
         _pendingEmployee = null;
+    }
+
+
+    public void OpenAddEmployeeFromQuickAction()
+    {
+        AddEmployeeOverlay.IsVisible = true;
+    }
+
+    private async void LoadManagerNotificationBadge()
+    {
+        int count = await GetManagerNotificationCountAsync();
+
+        ManagerNotificationBadge.IsVisible = count > 0;
+        ManagerNotificationBadgeLabel.Text = count > 99 ? "99+" : count.ToString();
+    }
+
+    private async Task<int> GetManagerNotificationCountAsync()
+    {
+        int count = 0;
+        var shifts = await _databaseService.GetShiftsAsync();
+
+        foreach (var shift in shifts)
+        {
+            if (shift.Status == "Pending")
+                count++;
+
+            if (string.IsNullOrWhiteSpace(shift.Employee) || shift.Employee == "-- Unassigned --")
+                count++;
+
+            var tasks = await _databaseService.GetTasksByShiftIdAsync(shift.Id);
+            count += tasks.Count(t => t.IsCompleted);
+        }
+
+        return count;
+    }
+
+    private async void OnBellTapped(object sender, TappedEventArgs e)
+    {
+        Page? page = Window?.Page ?? Application.Current?.Windows[0].Page;
+
+        if (page != null)
+        {
+            await page.Navigation.PushModalAsync(new ManagerNotification());
+            LoadManagerNotificationBadge();
+        }
     }
 
     private async Task ShowAlert(string title, string message)
