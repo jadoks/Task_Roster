@@ -1,58 +1,155 @@
 ﻿using Microsoft.Maui.Controls.Shapes;
+using Task_Roster.Models;
+using Task_Roster.Services;
 using Task_Roster.Views;
+using Microsoft.Maui.ApplicationModel.Communication;
 
 namespace Task_Roster.Views.EmployeeDashboardTabs;
 
 public partial class EmployeeSettingsView : ContentView
 {
+    private readonly DatabaseService _databaseService;
+
+
+    private string _currentEmail = "";
+
     public EmployeeSettingsView()
     {
         InitializeComponent();
+
+        _databaseService = new DatabaseService();
+       
+
+        LoadCurrentUser();
+    }
+
+    private async void LoadCurrentUser()
+    {
+        string email = Preferences.Get("UserEmail", "");
+
+        if (string.IsNullOrWhiteSpace(email))
+            return;
+
+        UserModel? user =
+            await _databaseService.GetUserByEmailAsync(email);
+
+        if (user == null)
+            return;
+
+        _currentEmail = user.Email;
+
+        string fullName =
+            $"{user.FirstName} {user.LastName}".Trim();
+
+        ProfileNameLabel.Text = fullName;
+        ProfileEmailLabel.Text = user.Email;
+
+        EditNameEntry.Text = fullName;
+        EditEmailEntry.Text = user.Email;
+
+        string initials =
+            $"{GetInitial(user.FirstName)}{GetInitial(user.LastName)}";
+
+        ProfileInitialsLabel.Text = initials;
+        EditProfileInitialsLabel.Text = initials;
+
+        if (user.ProfileImageBytes != null &&
+            user.ProfileImageBytes.Length > 0)
+        {
+            ProfileImage.Source =
+                ImageSource.FromStream(
+                    () => new MemoryStream(user.ProfileImageBytes));
+
+            EditProfileImage.Source =
+                ImageSource.FromStream(
+                    () => new MemoryStream(user.ProfileImageBytes));
+
+            ProfileImage.IsVisible = true;
+            EditProfileImage.IsVisible = true;
+
+            ProfileInitialsLabel.IsVisible = false;
+            EditProfileInitialsLabel.IsVisible = false;
+        }
+        else
+        {
+            ProfileImage.Source = null;
+            EditProfileImage.Source = null;
+
+            ProfileImage.IsVisible = false;
+            EditProfileImage.IsVisible = false;
+
+            ProfileInitialsLabel.IsVisible = true;
+            EditProfileInitialsLabel.IsVisible = true;
+        }
     }
 
     private void OnEditProfileClicked(object sender, EventArgs e)
     {
         SettingsMainView.IsVisible = false;
         EditProfileView.IsVisible = true;
-        NotificationView.IsVisible = false;
-    }
-
-    private void OnNotificationSettingsClicked(object sender, EventArgs e)
-    {
-        SettingsMainView.IsVisible = false;
-        EditProfileView.IsVisible = false;
-        NotificationView.IsVisible = true;
     }
 
     private void OnBackToSettingsClicked(object sender, EventArgs e)
     {
         SettingsMainView.IsVisible = true;
         EditProfileView.IsVisible = false;
-        NotificationView.IsVisible = false;
+    }
+
+    private async void OnBellClicked(object sender, TappedEventArgs e)
+    {
+        Page? page = Window?.Page;
+
+        if (page != null)
+            await page.Navigation.PushAsync(new EmployeeNotification());
     }
 
     private async void OnProfileCameraTapped(object sender, TappedEventArgs e)
     {
         try
         {
-            FileResult? photo = await FilePicker.Default.PickAsync(new PickOptions
-            {
-                PickerTitle = "Select Profile Picture",
-                FileTypes = FilePickerFileType.Images
-            });
+            FileResult? photo =
+                await FilePicker.Default.PickAsync(
+                    new PickOptions
+                    {
+                        PickerTitle = "Select Profile Picture",
+                        FileTypes = FilePickerFileType.Images
+                    });
 
             if (photo == null)
                 return;
 
-            using Stream sourceStream = await photo.OpenReadAsync();
+            using Stream sourceStream =
+                await photo.OpenReadAsync();
+
             using MemoryStream memoryStream = new();
 
             await sourceStream.CopyToAsync(memoryStream);
 
             byte[] imageBytes = memoryStream.ToArray();
 
-            ProfileImage.Source = ImageSource.FromStream(() => new MemoryStream(imageBytes));
-            EditProfileImage.Source = ImageSource.FromStream(() => new MemoryStream(imageBytes));
+            UserModel? user =
+                await _databaseService.GetUserByEmailAsync(_currentEmail);
+
+            if (user == null)
+            {
+                await ShowAlert(
+                    "Error",
+                    "Current user was not found.");
+
+                return;
+            }
+
+            user.ProfileImageBytes = imageBytes;
+
+            await _databaseService.UpdateUserAsync(user);
+
+            ProfileImage.Source =
+                ImageSource.FromStream(
+                    () => new MemoryStream(imageBytes));
+
+            EditProfileImage.Source =
+                ImageSource.FromStream(
+                    () => new MemoryStream(imageBytes));
 
             ProfileImage.IsVisible = true;
             EditProfileImage.IsVisible = true;
@@ -62,28 +159,87 @@ public partial class EmployeeSettingsView : ContentView
         }
         catch
         {
-            await ShowAlert("Error", "Unable to select profile picture.");
+            await ShowAlert(
+                "Error",
+                "Unable to select profile picture.");
         }
     }
 
     private async void OnSaveProfileClicked(object sender, EventArgs e)
     {
-        ProfileNameLabel.Text = EditNameEntry.Text;
-        ProfileEmailLabel.Text = EditEmailEntry.Text;
+        string fullName = EditNameEntry.Text?.Trim() ?? "";
+        string newEmail = EditEmailEntry.Text?.Trim().ToLower() ?? "";
 
-        await ShowAlert("Success", "Profile updated successfully.");
-    }
+        if (string.IsNullOrWhiteSpace(fullName) ||
+            string.IsNullOrWhiteSpace(newEmail))
+        {
+            await ShowAlert(
+                "Missing Information",
+                "Please complete all fields.");
 
-    private async void OnSaveNotificationsClicked(object sender, EventArgs e)
-    {
-        await ShowAlert("Saved", "Notification preferences updated.");
+            return;
+        }
+
+        UserModel? currentUser =
+            await _databaseService.GetUserByEmailAsync(_currentEmail);
+
+        if (currentUser == null)
+        {
+            await ShowAlert(
+                "Error",
+                "Current user was not found.");
+
+            return;
+        }
+
+        if (newEmail != _currentEmail.ToLower())
+        {
+            UserModel? existingUser =
+                await _databaseService.GetUserByEmailAsync(newEmail);
+
+            if (existingUser != null)
+            {
+                await ShowAlert(
+                    "Email Already Exists",
+                    "This email is already used by another account.");
+
+                return;
+            }
+        }
+
+        string[] nameParts = fullName.Split(' ', 2);
+
+        currentUser.FirstName = nameParts[0];
+        currentUser.LastName = nameParts.Length > 1 ? nameParts[1] : "";
+        currentUser.Email = newEmail;
+
+        await _databaseService.UpdateUserAsync(currentUser);
+
+        Preferences.Set("UserEmail", currentUser.Email);
+        Preferences.Set("UserName", currentUser.FirstName);
+        Preferences.Set("UserFirstName", currentUser.FirstName);
+        Preferences.Set("UserLastName", currentUser.LastName);
+        Preferences.Set("UserRole", currentUser.Role);
+
+        _currentEmail = currentUser.Email;
+
+        LoadCurrentUser();
+
+        await ShowAlert(
+            "Success",
+            "Profile updated successfully.");
+
+        SettingsMainView.IsVisible = true;
+        EditProfileView.IsVisible = false;
     }
 
     private void ShowModal(string title, View content)
     {
         ModalTitleLabel.Text = title;
+
         ModalContentLayout.Children.Clear();
         ModalContentLayout.Children.Add(content);
+
         ModalOverlay.IsVisible = true;
     }
 
@@ -109,93 +265,13 @@ public partial class EmployeeSettingsView : ContentView
                 BodyText("Assigned tasks are shown on your dashboard. Complete them based on priority and instructions."),
 
                 SectionTitle("Notifications"),
-                BodyText("You can manage shift reminders, task reminders, schedule updates, email notifications, and push notifications in Settings."),
+                BodyText("Tap the bell icon to view your employee notifications."),
 
                 BodyText("Need more help? Contact support for assistance.")
             }
         };
 
         ShowModal("Help Center", content);
-    }
-
-    private void OnContactSupportClicked(object sender, EventArgs e)
-    {
-        var buttonGrid = new Grid
-        {
-            ColumnDefinitions =
-            {
-                new ColumnDefinition(),
-                new ColumnDefinition()
-            },
-            ColumnSpacing = 12
-        };
-
-        var cancelButton = new Button
-        {
-            Text = "Cancel",
-            BackgroundColor = Colors.White,
-            TextColor = Color.FromArgb("#374151"),
-            BorderColor = Color.FromArgb("#D1D5DB"),
-            BorderWidth = 1,
-            CornerRadius = 6
-        };
-
-        cancelButton.Clicked += OnCloseModalClicked;
-
-        var submitButton = new Button
-        {
-            Text = "Submit",
-            BackgroundColor = Color.FromArgb("#14532D"),
-            TextColor = Colors.White,
-            CornerRadius = 6
-        };
-
-        Grid.SetColumn(submitButton, 1);
-
-        buttonGrid.Children.Add(cancelButton);
-        buttonGrid.Children.Add(submitButton);
-
-        var content = new VerticalStackLayout
-        {
-            Spacing = 14,
-            Children =
-            {
-                BodyText("📍 143 TaskRoster St., Cebu City, Philippines"),
-                BodyText("📞 +63 912 345 6789"),
-                BodyText("✉ support@taskroster.com"),
-                BodyText("For urgent inquiries, please call our hotline."),
-
-                new BoxView
-                {
-                    HeightRequest = 1,
-                    Color = Color.FromArgb("#D1D5DB")
-                },
-
-                new Entry
-                {
-                    Placeholder = "Name",
-                    BackgroundColor = Colors.White
-                },
-
-                new Entry
-                {
-                    Placeholder = "Email",
-                    Keyboard = Keyboard.Email,
-                    BackgroundColor = Colors.White
-                },
-
-                new Editor
-                {
-                    Placeholder = "Message",
-                    HeightRequest = 100,
-                    BackgroundColor = Colors.White
-                },
-
-                buttonGrid
-            }
-        };
-
-        ShowModal("Contact Support", content);
     }
 
     private void OnAboutClicked(object sender, EventArgs e)
@@ -232,7 +308,7 @@ public partial class EmployeeSettingsView : ContentView
                     TextColor = Color.FromArgb("#111827")
                 },
 
-                BodyText("• View today's shifts\n• View upcoming shifts\n• Track assigned tasks\n• Manage notification preferences\n• Contact support"),
+                BodyText("• View today's shifts\n• View upcoming shifts\n• Track assigned tasks\n• View employee notifications\n• Contact support"),
 
                 BodyText("© 2025 TaskRoster. All rights reserved.")
             }
@@ -243,15 +319,31 @@ public partial class EmployeeSettingsView : ContentView
 
     private async void OnLogoutClicked(object sender, EventArgs e)
     {
-        bool confirm = await ShowConfirm("Log Out", "Are you sure you want to log out?");
+        bool confirm =
+            await ShowConfirm(
+                "Log Out",
+                "Are you sure you want to log out?");
 
         if (!confirm)
             return;
 
         Preferences.Set("IsLoggedIn", false);
         Preferences.Remove("UserRole");
+        Preferences.Remove("UserName");
+        Preferences.Remove("UserFirstName");
+        Preferences.Remove("UserLastName");
+        Preferences.Remove("UserEmail");
 
-        Application.Current!.Windows[0].Page = new NavigationPage(new SignInPage());
+        Application.Current!.Windows[0].Page =
+            new NavigationPage(new SignInPage());
+    }
+
+    private string GetInitial(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "";
+
+        return value.Trim()[0].ToString().ToUpper();
     }
 
     private Label SectionTitle(string text)
@@ -289,7 +381,13 @@ public partial class EmployeeSettingsView : ContentView
         Page? page = Window?.Page;
 
         if (page != null)
-            return await page.DisplayAlert(title, message, "Yes", "No");
+        {
+            return await page.DisplayAlert(
+                title,
+                message,
+                "Yes",
+                "No");
+        }
 
         return false;
     }

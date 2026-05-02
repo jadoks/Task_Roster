@@ -1,3 +1,5 @@
+using Task_Roster.Views.EmployeeDashboardTabs;
+
 namespace Task_Roster.Views;
 
 public partial class LoadingPage : ContentPage
@@ -17,10 +19,27 @@ public partial class LoadingPage : ContentPage
         await Task.Delay(700);
 
         bool isLoggedIn = Preferences.Get("IsLoggedIn", false);
+        string userRole = Preferences.Get("UserRole", "");
 
-        if (isLoggedIn)
-            await Shell.Current.GoToAsync(nameof(DashboardPage));
-        else
+        if (!isLoggedIn)
+        {
             await Shell.Current.GoToAsync(nameof(SignInPage));
+            return;
+        }
+
+        if (userRole == "Manager")
+        {
+            await Shell.Current.GoToAsync(nameof(DashboardPage));
+        }
+        else if (userRole == "Employee")
+        {
+            Application.Current!.Windows[0].Page =
+                new EmployeeDashboardPage();
+        }
+        else
+        {
+            Preferences.Clear();
+            await Shell.Current.GoToAsync(nameof(SignInPage));
+        }
     }
 }

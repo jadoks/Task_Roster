@@ -1,5 +1,6 @@
 using Task_Roster.Models;
 using Task_Roster.Services;
+using Task_Roster.Views.EmployeeDashboardTabs;
 
 namespace Task_Roster.Views;
 
@@ -12,7 +13,6 @@ public partial class SignUpPage : ContentPage
     public SignUpPage()
     {
         InitializeComponent();
-
         _databaseService = new DatabaseService();
     }
 
@@ -30,49 +30,31 @@ public partial class SignUpPage : ContentPage
     {
         _selectedRole = "Manager";
 
-        ManagerButton.BackgroundColor =
-            Color.FromArgb("#165A3A");
-
+        ManagerButton.BackgroundColor = Color.FromArgb("#165A3A");
         ManagerButton.TextColor = Colors.White;
 
-        EmployeeButton.BackgroundColor =
-            Color.FromArgb("#DCE5E0");
-
-        EmployeeButton.TextColor =
-            Color.FromArgb("#165A3A");
+        EmployeeButton.BackgroundColor = Color.FromArgb("#DCE5E0");
+        EmployeeButton.TextColor = Color.FromArgb("#165A3A");
     }
 
     private void OnEmployeeClicked(object sender, EventArgs e)
     {
         _selectedRole = "Employee";
 
-        EmployeeButton.BackgroundColor =
-            Color.FromArgb("#165A3A");
-
+        EmployeeButton.BackgroundColor = Color.FromArgb("#165A3A");
         EmployeeButton.TextColor = Colors.White;
 
-        ManagerButton.BackgroundColor =
-            Color.FromArgb("#DCE5E0");
-
-        ManagerButton.TextColor =
-            Color.FromArgb("#165A3A");
+        ManagerButton.BackgroundColor = Color.FromArgb("#DCE5E0");
+        ManagerButton.TextColor = Color.FromArgb("#165A3A");
     }
 
     private async void OnRegisterClicked(object sender, EventArgs e)
     {
-        string email =
-            EmailEntry.Text?.Trim() ?? "";
+        string email = EmailEntry.Text?.Trim().ToLower() ?? "";
+        string firstName = FirstNameEntry.Text?.Trim() ?? "";
+        string lastName = LastNameEntry.Text?.Trim() ?? "";
+        string password = PasswordEntry.Text?.Trim() ?? "";
 
-        string firstName =
-            FirstNameEntry.Text?.Trim() ?? "";
-
-        string lastName =
-            LastNameEntry.Text?.Trim() ?? "";
-
-        string password =
-            PasswordEntry.Text?.Trim() ?? "";
-
-        // VALIDATION
         if (string.IsNullOrWhiteSpace(email) ||
             string.IsNullOrWhiteSpace(firstName) ||
             string.IsNullOrWhiteSpace(lastName) ||
@@ -87,10 +69,8 @@ public partial class SignUpPage : ContentPage
             return;
         }
 
-        // CHECK IF EMAIL EXISTS
-        var existingUser =
-            await _databaseService
-                .GetUserByEmailAsync(email);
+        UserModel? existingUser =
+            await _databaseService.GetUserByEmailAsync(email);
 
         if (existingUser != null)
         {
@@ -102,30 +82,22 @@ public partial class SignUpPage : ContentPage
             return;
         }
 
-        // CREATE USER
         var user = new UserModel
         {
             Email = email,
-
             FirstName = firstName,
-
             LastName = lastName,
-
             Password = password,
-
             Role = _selectedRole
         };
 
-        // SAVE TO SQLITE
         await _databaseService.AddUserAsync(user);
 
-        // LOGIN SESSION
         Preferences.Set("IsLoggedIn", true);
-
         Preferences.Set("UserRole", user.Role);
-
         Preferences.Set("UserName", user.FirstName);
-
+        Preferences.Set("UserFirstName", user.FirstName);
+        Preferences.Set("UserLastName", user.LastName);
         Preferences.Set("UserEmail", user.Email);
 
         await DisplayAlert(
@@ -133,14 +105,18 @@ public partial class SignUpPage : ContentPage
             "Account created successfully.",
             "OK");
 
-        // GO TO APP
-        Application.Current!.Windows[0].Page =
-            new AppShell();
+        if (user.Role == "Manager")
+        {
+            Application.Current!.Windows[0].Page = new AppShell();
 
-        await Task.Delay(100);
-
-        await Shell.Current.GoToAsync(
-            nameof(DashboardPage));
+            await Task.Delay(100);
+            await Shell.Current.GoToAsync(nameof(DashboardPage));
+        }
+        else if (user.Role == "Employee")
+        {
+            Application.Current!.Windows[0].Page =
+                new EmployeeDashboardPage();
+        }
     }
 
     private async void OnLoginClicked(object sender, EventArgs e)

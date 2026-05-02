@@ -23,43 +23,29 @@
 
             <VerticalStackLayout Spacing="2">
                 <Label
-                    Text="Hi, John"
+                    x:Name="GreetingLabel"
+                    Text="Hi, Employee"
                     FontSize="22"
                     FontAttributes="Bold"
                     TextColor="#111827" />
 
                 <Label
-                    Text="Tue, Sep 16"
+                    x:Name="DateLabel"
+                    Text=""
                     FontSize="14"
                     TextColor="#6B7280" />
             </VerticalStackLayout>
 
-            <Label
-                Text="Today's Shifts"
-                FontSize="17"
-                FontAttributes="Bold"
-                TextColor="#111827" />
+            <Label Text="Today's Shifts" FontSize="17" FontAttributes="Bold" TextColor="#111827" />
 
             <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="18">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
-                <Border.Shadow>
-                    <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.08" />
-                </Border.Shadow>
 
                 <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
-                    <Label
-                        Text="No shifts scheduled for today"
-                        FontSize="14"
-                        TextColor="#6B7280"
-                        HorizontalTextAlignment="Center" />
-
-                    <Label
-                        Text="Enjoy your day off!"
-                        FontSize="12"
-                        TextColor="#9CA3AF"
-                        HorizontalTextAlignment="Center" />
+                    <Label Text="No shifts scheduled for today" FontSize="14" TextColor="#6B7280" HorizontalTextAlignment="Center" />
+                    <Label Text="Enjoy your day off!" FontSize="12" TextColor="#9CA3AF" HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
             </Border>
 
@@ -70,7 +56,7 @@
                     </Border.StrokeShape>
 
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                        <Border BackgroundColor="#DBEAFE" WidthRequest="36" HeightRequest="36">
+                        <Border BackgroundColor="#E8F5EE" WidthRequest="36" HeightRequest="36">
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="18" />
                             </Border.StrokeShape>
@@ -105,45 +91,25 @@
                 </Border>
             </Grid>
 
-            <Label
-                Text="Upcoming Shifts"
-                FontSize="17"
-                FontAttributes="Bold"
-                TextColor="#111827" />
+            <Label Text="Upcoming Shifts" FontSize="17" FontAttributes="Bold" TextColor="#111827" />
 
             <Border BackgroundColor="White" Stroke="#E5E7EB" Padding="28">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
 
-                <Label
-                    Text="No upcoming shifts scheduled"
-                    FontSize="14"
-                    TextColor="#6B7280"
-                    HorizontalTextAlignment="Center" />
+                <Label Text="No upcoming shifts scheduled" FontSize="14" TextColor="#6B7280" HorizontalTextAlignment="Center" />
             </Border>
 
             <Grid ColumnDefinitions="*,Auto">
-                <Label
-                    Text="Tasks To Complete"
-                    FontSize="17"
-                    FontAttributes="Bold"
-                    TextColor="#111827" />
+                <Label Text="Tasks To Complete" FontSize="17" FontAttributes="Bold" TextColor="#111827" />
 
-                <Border
-                    Grid.Column="1"
-                    BackgroundColor="#DBEAFE"
-                    WidthRequest="24"
-                    HeightRequest="24">
+                <Border Grid.Column="1" BackgroundColor="#E8F5EE" WidthRequest="24" HeightRequest="24">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="12" />
                     </Border.StrokeShape>
-                    <Label
-                        Text="2"
-                        FontSize="12"
-                        TextColor="#2563EB"
-                        HorizontalOptions="Center"
-                        VerticalOptions="Center" />
+
+                    <Label Text="2" FontSize="12" TextColor="{StaticResource PrimaryGreen}" HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
             </Grid>
 

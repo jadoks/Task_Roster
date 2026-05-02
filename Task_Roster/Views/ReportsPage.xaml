@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Task_Roster.Views.ReportsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="#F5F6F8"
+    NavigationPage.HasNavigationBar="False">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <Grid
+            Padding="18,14"
+            BackgroundColor="#F5F6F8"
+            ColumnDefinitions="Auto,*"
+            ColumnSpacing="12">
+
+            <Button
+                Text="‹"
+                FontSize="34"
+                BackgroundColor="Transparent"
+                TextColor="#374151"
+                Padding="0"
+                WidthRequest="28"
+                HeightRequest="32"
+                Clicked="OnBackClicked" />
+
+            <Label
+                Grid.Column="1"
+                Text="Reports &amp; Analytics"
+                FontSize="18"
+                FontAttributes="Bold"
+                TextColor="#1F2937"
+                VerticalOptions="Center" />
+        </Grid>
+
+        <BoxView
+            Grid.Row="0"
+            HeightRequest="1"
+            Color="#E5E7EB"
+            VerticalOptions="End" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="24,20,24,24" Spacing="22">
+
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label
+                        Text="Overview"
+                        FontSize="16"
+                        TextColor="#1F2937"
+                        VerticalOptions="Center" />
+
+                    <Picker
+                        Grid.Column="1"
+                        WidthRequest="124"
+                        HeightRequest="40"
+                        ItemsSource="{Binding Periods}"
+                        SelectedIndex="0" />
+                </Grid>
+
+                <Grid
+                    x:Name="StatsGrid"
+                    ColumnDefinitions="*,*"
+                    RowDefinitions="Auto,Auto"
+                    ColumnSpacing="14"
+                    RowSpacing="14" />
+
+                <VerticalStackLayout
+                    x:Name="ChartsContainer"
+                    Spacing="22" />
+
+                <Button
+                    Text="⬇  Export Report"
+                    BackgroundColor="#16A34A"
+                    TextColor="White"
+                    CornerRadius="6"
+                    HeightRequest="54"
+                    FontSize="14" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

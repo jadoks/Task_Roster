@@ -16,4 +16,6 @@ public class UserModel
     public string Password { get; set; } = "";
 
     public string Role { get; set; } = "";
+
+    public byte[]? ProfileImageBytes { get; set; }
 }

@@ -8,7 +8,6 @@
     Shell.NavBarIsVisible="False">
 
     <Grid>
-
         <ScrollView>
             <Grid Padding="28" RowDefinitions="*,Auto,*">
 
@@ -118,18 +117,10 @@
                         BorderWidth="1"
                         Clicked="OnRegisterClicked" />
 
-                    <Label
-                        Text="Demo Accounts&#10;Manager: manager@demo.com / 123456&#10;Employee: employee@demo.com / 123456"
-                        FontSize="11"
-                        TextColor="#6B7280"
-                        HorizontalTextAlignment="Center"
-                        Margin="0,8,0,0" />
-
                 </VerticalStackLayout>
             </Grid>
         </ScrollView>
 
-        <!-- FORGOT PASSWORD MODAL -->
         <Grid
             x:Name="ForgotPasswordOverlay"
             IsVisible="False"
@@ -168,10 +159,7 @@
                             Clicked="OnCloseForgotPasswordClicked" />
                     </Grid>
 
-                    <VerticalStackLayout
-                        x:Name="ForgotEmailStep"
-                        Spacing="14">
-
+                    <VerticalStackLayout x:Name="ForgotEmailStep" Spacing="14">
                         <Label
                             Text="Enter your email address to receive your verification PIN."
                             FontSize="13"
@@ -201,18 +189,13 @@
                             Clicked="OnProceedEmailClicked" />
                     </VerticalStackLayout>
 
-                    <VerticalStackLayout
-                        x:Name="ForgotPinStep"
-                        IsVisible="False"
-                        Spacing="14">
-
+                    <VerticalStackLayout x:Name="ForgotPinStep" IsVisible="False" Spacing="14">
                         <Label
                             Text="Enter the 4-digit verification PIN sent to your email."
                             FontSize="13"
                             TextColor="#6B7280" />
 
                         <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
-
                             <Border Stroke="{StaticResource BorderGreen}" StrokeThickness="1" WidthRequest="45" HeightRequest="45">
                                 <Border.StrokeShape>
                                     <RoundRectangle CornerRadius="8" />
@@ -240,7 +223,6 @@
                                 </Border.StrokeShape>
                                 <Entry x:Name="Pin4Entry" Keyboard="Numeric" MaxLength="1" FontSize="18" HorizontalTextAlignment="Center" />
                             </Border>
-
                         </HorizontalStackLayout>
 
                         <Button
@@ -253,11 +235,7 @@
                             Clicked="OnProceedPinClicked" />
                     </VerticalStackLayout>
 
-                    <VerticalStackLayout
-                        x:Name="ForgotNewPasswordStep"
-                        IsVisible="False"
-                        Spacing="14">
-
+                    <VerticalStackLayout x:Name="ForgotNewPasswordStep" IsVisible="False" Spacing="14">
                         <Label
                             Text="Create and confirm your new password."
                             FontSize="13"
