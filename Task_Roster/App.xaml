@@ -17,6 +17,21 @@
             <Color x:Key="BorderGreen">#8BA596</Color>
             <Color x:Key="NavDark">#191919</Color>
 
+            <Style TargetType="Entry">
+                <Setter Property="TextColor" Value="Black" />
+                <Setter Property="PlaceholderColor" Value="Gray" />
+                <Setter Property="BackgroundColor" Value="White" />
+            </Style>
+
+            <Style TargetType="Editor">
+                <Setter Property="TextColor" Value="Black" />
+                <Setter Property="BackgroundColor" Value="White" />
+            </Style>
+
+            <Style TargetType="Label">
+                <Setter Property="TextColor" Value="Black" />
+            </Style>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>
