@@ -16,6 +16,10 @@ public partial class TeamView : ContentView
 
     private EmployeeModel? _pendingEmployee;
 
+    private EmployeeModel? _editingEmployee;
+
+    private bool _isEditMode = false;
+
     public TeamView()
     {
         InitializeComponent();
@@ -177,6 +181,8 @@ public partial class TeamView : ContentView
             VerticalOptions = LayoutOptions.Center
         };
 
+        editButton.Clicked += (_, _) => OpenEditEmployee(employee);
+
         Grid.SetColumn(editButton, 2);
 
         var headerGrid = new Grid
@@ -250,6 +256,75 @@ public partial class TeamView : ContentView
         };
     }
 
+    private void OpenEditEmployee(EmployeeModel employee)
+    {
+        _isEditMode = true;
+
+        _editingEmployee = employee;
+
+        NameEntry.Text = employee.Name;
+        EmailEntry.Text = employee.Email;
+        MaxHoursEntry.Text = employee.MaxHours.ToString();
+
+        _pendingSkills.Clear();
+        SelectedSkillsLayout.Children.Clear();
+
+        foreach (var skill in employee.Skills
+                     .Split(',', StringSplitOptions.RemoveEmptyEntries))
+        {
+            string trimmedSkill = skill.Trim();
+
+            _pendingSkills.Add(trimmedSkill);
+
+            SelectedSkillsLayout.Children.Add(
+                CreatePill(trimmedSkill, "#BBF7D0", "#166534"));
+        }
+
+        ResetAvailabilitySelections();
+
+        var availabilityItems = employee.Availability
+            .Split('|', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var item in availabilityItems)
+        {
+            if (item.StartsWith("Monday"))
+                MondayCheckBox.IsChecked = true;
+
+            else if (item.StartsWith("Tuesday"))
+                TuesdayCheckBox.IsChecked = true;
+
+            else if (item.StartsWith("Wednesday"))
+                WednesdayCheckBox.IsChecked = true;
+
+            else if (item.StartsWith("Thursday"))
+                ThursdayCheckBox.IsChecked = true;
+
+            else if (item.StartsWith("Friday"))
+                FridayCheckBox.IsChecked = true;
+
+            else if (item.StartsWith("Saturday"))
+                SaturdayCheckBox.IsChecked = true;
+
+            else if (item.StartsWith("Sunday"))
+                SundayCheckBox.IsChecked = true;
+        }
+
+        UpdateDayTimeVisibility();
+
+        AddEmployeeOverlay.IsVisible = true;
+    }
+
+    private void ResetAvailabilitySelections()
+    {
+        MondayCheckBox.IsChecked = false;
+        TuesdayCheckBox.IsChecked = false;
+        WednesdayCheckBox.IsChecked = false;
+        ThursdayCheckBox.IsChecked = false;
+        FridayCheckBox.IsChecked = false;
+        SaturdayCheckBox.IsChecked = false;
+        SundayCheckBox.IsChecked = false;
+    }
+
     private View CreatePill(string text, string bg, string fg)
     {
         return new Border
@@ -306,6 +381,15 @@ public partial class TeamView : ContentView
         SkillEntry.Text = "";
     }
 
+   
+
+    private void OnBackToEditClicked(object sender, EventArgs e)
+    {
+        ConfirmEmployeeOverlay.IsVisible = false;
+
+        AddEmployeeOverlay.IsVisible = true;
+    }
+
     private async void OnContinueEmployeeClicked(object sender, EventArgs e)
     {
         if (string.IsNullOrWhiteSpace(NameEntry.Text))
@@ -324,18 +408,16 @@ public partial class TeamView : ContentView
 
         int.TryParse(MaxHoursEntry.Text, out int maxHours);
 
-        _pendingEmployee = new EmployeeModel
-        {
-            Name = name,
+        _pendingEmployee = _isEditMode && _editingEmployee != null
+            ? _editingEmployee
+            : new EmployeeModel();
 
-            Email = email,
-
-            Skills = string.Join(",", _pendingSkills),
-
-            MaxHours = maxHours <= 0 ? 40 : maxHours,
-
-            Availability = string.Join("|", GetSelectedDaysWithTimes())
-        };
+        _pendingEmployee.Name = name;
+        _pendingEmployee.Email = email;
+        _pendingEmployee.Skills = string.Join(",", _pendingSkills);
+        _pendingEmployee.MaxHours = maxHours <= 0 ? 40 : maxHours;
+        _pendingEmployee.Availability =
+            string.Join("|", GetSelectedDaysWithTimes());
 
         ConfirmNameLabel.Text = _pendingEmployee.Name;
 
@@ -360,30 +442,6 @@ public partial class TeamView : ContentView
         AddEmployeeOverlay.IsVisible = false;
 
         ConfirmEmployeeOverlay.IsVisible = true;
-    }
-
-    private void OnBackToEditClicked(object sender, EventArgs e)
-    {
-        ConfirmEmployeeOverlay.IsVisible = false;
-
-        AddEmployeeOverlay.IsVisible = true;
-    }
-
-    private async void OnConfirmAddEmployeeClicked(object sender, EventArgs e)
-    {
-        if (_pendingEmployee == null)
-            return;
-
-        await _databaseService.AddEmployeeAsync(_pendingEmployee);
-        LoadManagerNotificationBadge();
-
-        _employees.Add(_pendingEmployee);
-
-        ClearForm();
-
-        ConfirmEmployeeOverlay.IsVisible = false;
-
-        RenderEmployees(SearchEmployeeBar.Text ?? "");
     }
 
     private List<string> GetSelectedDaysWithTimes()
@@ -509,6 +567,34 @@ public partial class TeamView : ContentView
         }
 
         return count;
+    }
+
+    private async void OnConfirmAddEmployeeClicked(object sender, EventArgs e)
+    {
+        if (_pendingEmployee == null)
+            return;
+
+        bool wasEdit = _isEditMode;
+
+        if (_isEditMode)
+        {
+            await _databaseService.UpdateEmployeeAsync(_pendingEmployee);
+        }
+        else
+        {
+            await _databaseService.AddEmployeeAsync(_pendingEmployee);
+        }
+
+        ConfirmEmployeeOverlay.IsVisible = false;
+
+        ClearForm();
+
+        _isEditMode = false;
+        _editingEmployee = null;
+
+        LoadEmployees();
+
+        await ShowAlert("Success", wasEdit ? "Employee updated." : "Employee added.");
     }
 
     private async void OnBellTapped(object sender, TappedEventArgs e)
