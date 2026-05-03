@@ -5,6 +5,11 @@ using Task_Roster.Models;
 using Task_Roster.Services;
 using Task_Roster.Views;
 using Microsoft.Maui.Storage;
+using Microsoft.Maui.Graphics;
+using Microcharts;
+using Microcharts.Maui;
+using SkiaSharp;
+using MauiColor = Microsoft.Maui.Graphics.Color;
 
 namespace Task_Roster.Views.DashboardTabs;
 
@@ -324,7 +329,213 @@ public partial class SettingsView : ContentView
     // EXPORT DATA
     // =========================
 
-    private async void OnExportDataClicked(object sender, EventArgs e)
+    private void OnExportDataClicked(object sender, EventArgs e)
+    {
+        var layout = new VerticalStackLayout
+        {
+            Spacing = 14
+        };
+
+        layout.Children.Add(CreateExportButton("Export as CSV", "#2563EB", async () =>
+        {
+            await ExportCsv();
+        }));
+
+        layout.Children.Add(CreateExportButton("Export as XLS", "#16A34A", async () =>
+        {
+            await ExportXls();
+        }));
+
+        layout.Children.Add(CreateExportButton("Export as PDF", "#DC2626", async () =>
+        {
+            await ExportPdf();
+        }));
+
+        ShowModal("Choose Export Format", layout);
+    }
+
+    private View CreateExportButton(
+    string text,
+    string color,
+    Func<Task> action)
+    {
+        Button button = new()
+        {
+            Text = text,
+            BackgroundColor = MauiColor.FromArgb(color),
+            TextColor = MauiColor.FromArgb("#FFFFFF"),
+            CornerRadius = 8,
+            HeightRequest = 50
+        };
+
+        button.Clicked += async (_, _) =>
+        {
+            ModalOverlay.IsVisible = false;
+            await action();
+        };
+
+        return button;
+    }
+
+    private async Task ExportCsv()
+    {
+        try
+        {
+            var shifts = await _databaseService.GetShiftsAsync();
+
+            StringBuilder builder = new();
+
+            builder.AppendLine("Employee,Status,Date");
+
+            foreach (var shift in shifts)
+            {
+                builder.AppendLine(
+                    $"{shift.Employee},{shift.Status},{shift.Date:yyyy-MM-dd}");
+            }
+
+            string fileName =
+                $"TaskRoster_{DateTime.Now:yyyyMMddHHmmss}.csv";
+
+            string filePath =
+                System.IO.Path.Combine(FileSystem.CacheDirectory, fileName);
+
+            File.WriteAllText(filePath, builder.ToString());
+
+            await Share.Default.RequestAsync(new ShareFileRequest
+            {
+                Title = "Export CSV",
+                File = new ShareFile(filePath)
+            });
+
+            await ShowAlert("Success", "CSV exported successfully.");
+        }
+        catch (Exception ex)
+        {
+            await ShowAlert("Export Error", ex.Message);
+        }
+    }
+
+    private async Task ExportXls()
+    {
+        try
+        {
+            var shifts = await _databaseService.GetShiftsAsync();
+
+            StringBuilder builder = new();
+
+            builder.AppendLine("Employee\tStatus\tDate");
+
+            foreach (var shift in shifts)
+            {
+                builder.AppendLine(
+                    $"{shift.Employee}\t{shift.Status}\t{shift.Date:yyyy-MM-dd}");
+            }
+
+            string fileName =
+                $"TaskRoster_{DateTime.Now:yyyyMMddHHmmss}.xls";
+
+            string filePath =
+                System.IO.Path.Combine(FileSystem.CacheDirectory, fileName);
+
+            File.WriteAllText(filePath, builder.ToString());
+
+            await Share.Default.RequestAsync(new ShareFileRequest
+            {
+                Title = "Export XLS",
+                File = new ShareFile(filePath)
+            });
+
+            await ShowAlert("Success", "XLS exported successfully.");
+        }
+        catch (Exception ex)
+        {
+            await ShowAlert("Export Error", ex.Message);
+        }
+    }
+
+    private View CreateExportOption(
+    string title,
+    string description,
+    string color,
+    Func<Task> action)
+    {
+        Border card = new()
+        {
+            BackgroundColor = MauiColor.FromArgb("#FFFFFF"),
+            Stroke = MauiColor.FromArgb("#E5E7EB"),
+            Padding = 16,
+
+            StrokeShape = new RoundRectangle
+            {
+                CornerRadius = 8
+            }
+        };
+
+        Grid grid = new()
+        {
+            ColumnDefinitions =
+        {
+            new ColumnDefinition { Width = GridLength.Auto },
+            new ColumnDefinition { Width = GridLength.Star }
+        },
+
+            ColumnSpacing = 14
+        };
+
+        Border icon = new()
+        {
+            WidthRequest = 42,
+            HeightRequest = 42,
+            BackgroundColor = MauiColor.FromArgb(color),
+            StrokeThickness = 0,
+
+            StrokeShape = new RoundRectangle
+            {
+                CornerRadius = 21
+            }
+        };
+
+        VerticalStackLayout textStack = new()
+        {
+            Spacing = 3
+        };
+
+        textStack.Children.Add(new Label
+        {
+            Text = title,
+            FontSize = 15,
+            FontAttributes = FontAttributes.Bold,
+            TextColor = MauiColor.FromArgb("#111827")
+        });
+
+        textStack.Children.Add(new Label
+        {
+            Text = description,
+            FontSize = 12,
+            TextColor = MauiColor.FromArgb("#6B7280")
+        });
+
+        Grid.SetColumn(textStack, 1);
+
+        grid.Children.Add(icon);
+        grid.Children.Add(textStack);
+
+        card.Content = grid;
+
+        TapGestureRecognizer tap = new();
+
+        tap.Tapped += async (_, _) =>
+        {
+            ModalOverlay.IsVisible = false;
+            await action();
+        };
+
+        card.GestureRecognizers.Add(tap);
+
+        return card;
+    }
+
+    private async Task ExportDataAsync(string format)
     {
         try
         {
@@ -332,6 +543,9 @@ public partial class SettingsView : ContentView
             var tasks = await _databaseService.GetTasksAsync();
 
             StringBuilder builder = new();
+
+            builder.AppendLine("TASKROSTER REPORT");
+            builder.AppendLine();
 
             builder.AppendLine("=== SHIFTS ===");
             builder.AppendLine("Employee,Status,Date");
@@ -343,6 +557,7 @@ public partial class SettingsView : ContentView
             }
 
             builder.AppendLine();
+
             builder.AppendLine("=== TASKS ===");
             builder.AppendLine("Title,Completed");
 
@@ -352,8 +567,10 @@ public partial class SettingsView : ContentView
                     $"{task.Title},{task.IsCompleted}");
             }
 
+            string extension = format.ToLower();
+
             string fileName =
-                $"TaskRoster_Backup_{DateTime.Now:yyyyMMddHHmmss}.csv";
+                $"TaskRoster_Report_{DateTime.Now:yyyyMMddHHmmss}.{extension}";
 
             string filePath =
                 System.IO.Path.Combine(FileSystem.CacheDirectory, fileName);
@@ -362,17 +579,57 @@ public partial class SettingsView : ContentView
 
             await Share.Default.RequestAsync(new ShareFileRequest
             {
-                Title = "Export Database Backup",
+                Title = "Export TaskRoster Data",
                 File = new ShareFile(filePath)
             });
 
             await ShowAlert(
                 "Export Successful",
-                "SQLite database exported successfully.");
+                $"Data exported successfully as {extension.ToUpper()}.");
         }
         catch (Exception ex)
         {
             await ShowAlert("Export Error", ex.Message);
+        }
+    }
+
+    private async Task ExportPdf()
+    {
+        try
+        {
+            var shifts = await _databaseService.GetShiftsAsync();
+
+            StringBuilder builder = new();
+
+            builder.AppendLine("TASKROSTER REPORT");
+            builder.AppendLine("======================");
+            builder.AppendLine();
+
+            foreach (var shift in shifts)
+            {
+                builder.AppendLine(
+                    $"{shift.Employee} | {shift.Status} | {shift.Date:yyyy-MM-dd}");
+            }
+
+            string fileName =
+                $"TaskRoster_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+
+            string filePath =
+                System.IO.Path.Combine(FileSystem.CacheDirectory, fileName);
+
+            File.WriteAllText(filePath, builder.ToString());
+
+            await Share.Default.RequestAsync(new ShareFileRequest
+            {
+                Title = "Export PDF",
+                File = new ShareFile(filePath)
+            });
+
+            await ShowAlert("Success", "PDF exported successfully.");
+        }
+        catch (Exception ex)
+        {
+            await ShowAlert("PDF Export Error", ex.Message);
         }
     }
 
@@ -386,12 +643,9 @@ public partial class SettingsView : ContentView
         {
             var shifts = await _databaseService.GetShiftsAsync();
 
-            int totalShifts = shifts.Count;
-            int pendingShifts = shifts.Count(s => s.Status == "Pending");
-            int approvedShifts = shifts.Count(s => s.Status == "Approved");
-            int unassignedShifts = shifts.Count(s =>
-                string.IsNullOrWhiteSpace(s.Employee) ||
-                s.Employee == "-- Unassigned --");
+            int pending = shifts.Count(s => s.Status == "Pending");
+            int approved = shifts.Count(s => s.Status == "Approved");
+            int rejected = shifts.Count(s => s.Status == "Rejected");
 
             int totalTasks = 0;
             int completedTasks = 0;
@@ -404,26 +658,88 @@ public partial class SettingsView : ContentView
                 completedTasks += tasks.Count(t => t.IsCompleted);
             }
 
-            double completionRate = 0;
+            int incompleteTasks = totalTasks - completedTasks;
 
-            if (totalTasks > 0)
+            var shiftChart = new ChartView
             {
-                completionRate = (double)completedTasks / totalTasks * 100;
-            }
+                HeightRequest = 220,
+                Chart = new DonutChart
+                {
+                    Entries = new[]
+                    {
+                    new ChartEntry(pending)
+                    {
+                        Label = "Pending",
+                        ValueLabel = pending.ToString(),
+                        Color = SKColor.Parse("#F59E0B")
+                    },
+
+                    new ChartEntry(approved)
+                    {
+                        Label = "Approved",
+                        ValueLabel = approved.ToString(),
+                        Color = SKColor.Parse("#10B981")
+                    },
+
+                    new ChartEntry(rejected)
+                    {
+                        Label = "Rejected",
+                        ValueLabel = rejected.ToString(),
+                        Color = SKColor.Parse("#EF4444")
+                    }
+                }
+                }
+            };
+
+            var taskChart = new ChartView
+            {
+                HeightRequest = 220,
+                Chart = new BarChart
+                {
+                    Entries = new[]
+                    {
+                    new ChartEntry(completedTasks)
+                    {
+                        Label = "Completed",
+                        ValueLabel = completedTasks.ToString(),
+                        Color = SKColor.Parse("#2563EB")
+                    },
+
+                    new ChartEntry(incompleteTasks)
+                    {
+                        Label = "Incomplete",
+                        ValueLabel = incompleteTasks.ToString(),
+                        Color = SKColor.Parse("#DC2626")
+                    }
+                }
+                }
+            };
 
             var content = new VerticalStackLayout
             {
-                Spacing = 14,
+                Spacing = 24,
                 Children =
+            {
+                new Label
                 {
-                    CreateAnalyticsCard("Total Shifts", totalShifts.ToString(), "#DBEAFE"),
-                    CreateAnalyticsCard("Pending Shifts", pendingShifts.ToString(), "#FEF3C7"),
-                    CreateAnalyticsCard("Approved Shifts", approvedShifts.ToString(), "#DCFCE7"),
-                    CreateAnalyticsCard("Unassigned Shifts", unassignedShifts.ToString(), "#FEE2E2"),
-                    CreateAnalyticsCard("Total Tasks", totalTasks.ToString(), "#EDE9FE"),
-                    CreateAnalyticsCard("Completed Tasks", completedTasks.ToString(), "#DCFCE7"),
-                    CreateAnalyticsCard("Completion Rate", $"{completionRate:F1}%", "#DBEAFE")
-                }
+                    Text = "Shift Status Overview",
+                    FontSize = 18,
+                    FontAttributes = FontAttributes.Bold,
+                    TextColor = MauiColor.FromArgb("#111827")
+                },
+
+                shiftChart,
+
+                new Label
+                {
+                    Text = "Task Completion Analytics",
+                    FontSize = 18,
+                    FontAttributes = FontAttributes.Bold,
+                    TextColor = MauiColor.FromArgb("#111827")
+                },
+
+                taskChart
+            }
             };
 
             ShowModal("Reports & Analytics", content);
@@ -438,7 +754,7 @@ public partial class SettingsView : ContentView
     {
         return new Border
         {
-            BackgroundColor = Color.FromArgb(bgColor),
+            BackgroundColor = MauiColor.FromArgb(bgColor),
             StrokeThickness = 0,
             Padding = 16,
             StrokeShape = new RoundRectangle { CornerRadius = 8 },
@@ -452,7 +768,7 @@ public partial class SettingsView : ContentView
                     {
                         Text = title,
                         FontSize = 13,
-                        TextColor = Color.FromArgb("#6B7280")
+                        TextColor = MauiColor.FromArgb("#6B7280")
                     },
 
                     new Label
@@ -460,10 +776,77 @@ public partial class SettingsView : ContentView
                         Text = value,
                         FontSize = 26,
                         FontAttributes = FontAttributes.Bold,
-                        TextColor = Color.FromArgb("#111827")
+                        TextColor = MauiColor.FromArgb("#111827")
                     }
                 }
             }
+        };
+    }
+
+    private View CreateChartBar(
+    string title,
+    object value,
+    double width,
+    string color)
+    {
+        return new VerticalStackLayout
+        {
+            Spacing = 6,
+
+            Children =
+        {
+            new Grid
+            {
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition(GridLength.Star),
+                    new ColumnDefinition(GridLength.Auto)
+                },
+
+                Children =
+                {
+                    new Label
+                    {
+                        Text = title,
+                        FontSize = 13,
+                        TextColor = MauiColor.FromArgb("#374151")
+                    },
+
+                    new Label
+                    {
+                        Text = value.ToString(),
+                        FontSize = 13,
+                        FontAttributes = FontAttributes.Bold,
+                        TextColor = MauiColor.FromArgb("#111827")
+                    }
+                }
+            },
+
+            new Border
+            {
+                HeightRequest = 14,
+                BackgroundColor = MauiColor.FromArgb("#E5E7EB"),
+                StrokeThickness = 0,
+
+                StrokeShape = new RoundRectangle
+                {
+                    CornerRadius = 7
+                },
+
+                Content = new Border
+                {
+                    WidthRequest = width,
+                    HorizontalOptions = LayoutOptions.Start,
+                    BackgroundColor = MauiColor.FromArgb(color),
+                    StrokeThickness = 0,
+
+                    StrokeShape = new RoundRectangle
+                    {
+                        CornerRadius = 7
+                    }
+                }
+            }
+        }
         };
     }
 
@@ -503,7 +886,7 @@ public partial class SettingsView : ContentView
                     Text = "TaskRoster",
                     FontSize = 22,
                     FontAttributes = FontAttributes.Bold,
-                    TextColor = Color.FromArgb("#16A34A"),
+                    TextColor = MauiColor.FromArgb("#16A34A"),
                     HorizontalTextAlignment = TextAlignment.Center
                 },
 
@@ -511,7 +894,7 @@ public partial class SettingsView : ContentView
                 {
                     Text = "Version 1.0.0",
                     FontSize = 12,
-                    TextColor = Color.FromArgb("#6B7280"),
+                    TextColor = MauiColor.FromArgb("#6B7280"),
                     HorizontalTextAlignment = TextAlignment.Center
                 },
 
@@ -556,7 +939,7 @@ public partial class SettingsView : ContentView
             Text = text,
             FontSize = 14,
             FontAttributes = FontAttributes.Bold,
-            TextColor = Color.FromArgb("#16A34A")
+            TextColor = MauiColor.FromArgb("#16A34A")
         };
     }
 
@@ -566,7 +949,7 @@ public partial class SettingsView : ContentView
         {
             Text = text,
             FontSize = 13,
-            TextColor = Color.FromArgb("#4B5563"),
+            TextColor = MauiColor.FromArgb("#4B5563"),
             LineHeight = 1.35
         };
     }

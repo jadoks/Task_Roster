@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Task_Roster.Services;
 using SkiaSharp.Views.Maui.Controls.Hosting;
+using Microcharts.Maui;
 namespace Task_Roster;
 
 public static class MauiProgram
@@ -12,6 +13,7 @@ public static class MauiProgram
 
         builder
             .UseMauiApp<App>()
+            .UseMicrocharts()
             .UseSkiaSharp()
             .UseMauiCommunityToolkit()
             .ConfigureFonts(fonts =>

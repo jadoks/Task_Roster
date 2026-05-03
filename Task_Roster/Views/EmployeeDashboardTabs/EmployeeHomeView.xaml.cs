@@ -189,9 +189,31 @@ public partial class EmployeeHomeView : ContentView
         if (assignedEmployee == "-- Unassigned --")
             return false;
 
-        return assignedEmployee.Equals(_currentFullName, StringComparison.OrdinalIgnoreCase) ||
-               assignedEmployee.Equals(_currentEmail, StringComparison.OrdinalIgnoreCase) ||
-               assignedEmployee.Equals(_currentUser?.FirstName, StringComparison.OrdinalIgnoreCase);
+        assignedEmployee = assignedEmployee.Trim();
+
+        // Match by email
+        if (assignedEmployee.Contains(_currentEmail,
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Match by full name
+        if (assignedEmployee.Contains(_currentFullName,
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Match by first name
+        if (!string.IsNullOrWhiteSpace(_currentUser?.FirstName) &&
+            assignedEmployee.Contains(_currentUser.FirstName,
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private void RenderTodayShifts(List<ShiftModel> shifts)

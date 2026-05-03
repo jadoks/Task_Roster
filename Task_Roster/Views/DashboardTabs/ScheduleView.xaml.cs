@@ -43,7 +43,7 @@ public partial class ScheduleView : ContentView
 
         foreach (var employee in employees)
         {
-            EmployeePicker.Items.Add(employee.Name);
+            EmployeePicker.Items.Add($"{employee.Name} | {employee.Email}");
         }
 
         EmployeePicker.SelectedIndex = 0;
@@ -232,7 +232,8 @@ public partial class ScheduleView : ContentView
             return;
         }
 
-        EmployeePicker.SelectedItem = employee.Name;
+        EmployeePicker.SelectedItem =
+    $"{employee.Name} | {employee.Email}";
         await ShowAlert("Auto Assign Complete", $"{employee.Name} assigned automatically.");
     }
 
@@ -292,13 +293,12 @@ public partial class ScheduleView : ContentView
         }
 
 
-        await _databaseService.AddShiftAsync(_pendingShift);
-        LoadManagerNotificationBadge();
-
         int newId = await _databaseService.AddShiftAsync(_pendingShift);
 
-        _pendingShift.Id = newId; // ✅ FIX
+        LoadManagerNotificationBadge();
 
+        _pendingShift.Id = newId; // ✅ FIX
+        _pendingShift = null;
         _selectedShift = _pendingShift;
 
         ConfirmOverlay.IsVisible = false;
