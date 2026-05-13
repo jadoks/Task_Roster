@@ -11,6 +11,9 @@ public class EmployeeModel
 
     public string Email { get; set; } = "";
 
+    // ADD THIS LINE
+    public string Role { get; set; } = "";
+
     public string Skills { get; set; } = "";
 
     public int MaxHours { get; set; }

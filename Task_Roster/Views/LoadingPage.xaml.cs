@@ -13,11 +13,14 @@ public partial class LoadingPage : ContentPage
     {
         base.OnAppearing();
 
-        await LoadingLine.ScaleTo(1.6, 500, Easing.CubicInOut);
-        await LoadingLine.ScaleTo(1.0, 500, Easing.CubicInOut);
+        // 1. Set the initial state of the line to be very small
+        LoadingLine.ScaleX = 0.1;
 
-        await Task.Delay(700);
+        // 2. Scale the line horizontally from small to long over exactly 3 seconds
+        // This replaces the old ScaleTo and Task.Delay logic
+        await LoadingLine.ScaleXTo(4.0, 2000, Easing.CubicInOut);
 
+        // 3. Original Navigation Logic (Unchanged)
         bool isLoggedIn = Preferences.Get("IsLoggedIn", false);
         string userRole = Preferences.Get("UserRole", "");
 

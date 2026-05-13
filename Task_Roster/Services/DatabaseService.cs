@@ -9,10 +9,7 @@ public class DatabaseService
 
     public DatabaseService()
     {
-        string dbPath = Path.Combine(
-            FileSystem.AppDataDirectory,
-            "schedule.db");
-
+        string dbPath = Path.Combine(FileSystem.AppDataDirectory, "schedule.db");
         _database = new SQLiteAsyncConnection(dbPath);
 
         _database.CreateTableAsync<ShiftModel>().Wait();
@@ -20,8 +17,6 @@ public class DatabaseService
         _database.CreateTableAsync<UserModel>().Wait();
         _database.CreateTableAsync<TaskModel>().Wait();
         _database.CreateTableAsync<NotificationReadModel>().Wait();
-
-        AddMissingUserColumns();
     }
 
     private void AddMissingUserColumns()
@@ -98,8 +93,33 @@ public class DatabaseService
     public async Task AddEmployeeAsync(EmployeeModel employee)
         => await _database.InsertAsync(employee);
 
+    // ---------------- EMPLOYEES ----------------
+
     public async Task<List<EmployeeModel>> GetEmployeesAsync()
-        => await _database.Table<EmployeeModel>().ToListAsync();
+    {
+        try
+        {
+            // Pull from the UserModel table where SignUpPage saves data
+            var allUsers = await _database.Table<UserModel>().ToListAsync();
+
+            // Filter for only the "Employee" role selected in your SignUpPage
+            return allUsers
+                .Where(u => u.Role != null && u.Role.Equals("Employee", StringComparison.OrdinalIgnoreCase))
+                .Select(u => new EmployeeModel
+                {
+                    Name = u.Name, // Uses the [Ignore] property from UserModel
+                    Email = u.Email,
+                    Role = u.Role,
+                    Availability = "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+                    Skills = "General"
+                })
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            return new List<EmployeeModel>();
+        }
+    }
 
     public async Task UpdateEmployeeAsync(EmployeeModel employee)
         => await _database.UpdateAsync(employee);
@@ -174,5 +194,10 @@ public class DatabaseService
         return await _database.Table<TaskModel>().ToListAsync();
     }
 
-
+    // Put this at the end of DatabaseService.cs
+    public class ShiftDetailsDto
+    {
+        public ShiftModel? Shift { get; set; }
+        public List<TaskModel> Tasks { get; set; } = new();
+    }
 }

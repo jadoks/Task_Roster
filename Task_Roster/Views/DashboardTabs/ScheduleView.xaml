@@ -84,7 +84,7 @@
                 <HorizontalStackLayout Spacing="10">
                     <Button
                         Text="+  Add Shift"
-                        BackgroundColor="#2563EB"
+                        BackgroundColor="#16A34A"
                         TextColor="White"
                         CornerRadius="6"
                         FontSize="13"
@@ -93,12 +93,14 @@
 
                     <Button
                         Text="⚡  Auto Assign"
-                        BackgroundColor="#16A34A"
-                        TextColor="White"
+                        BackgroundColor="White"
+                        TextColor="#16A34A"
+                        BorderColor="#16A34A"
+                        BorderWidth="1"
                         CornerRadius="6"
                         FontSize="13"
                         Padding="16,10"
-                        Clicked="OnAutoAssignClicked" />
+                        Clicked="OnAutoAssignClicked" />        
                 </HorizontalStackLayout>
 
                 <Grid
@@ -352,17 +354,18 @@
                         <Button
                             Text="Cancel"
                             BackgroundColor="White"
-                            TextColor="#6B7280"
-                            BorderColor="#E5E7EB"
+                            TextColor="Black"
+                            BorderColor="Black"
                             BorderWidth="1"
+                            CornerRadius="4"
                             Clicked="OnCancelAddShiftClicked" />
-
                         <Button
                             Grid.Column="1"
                             Text="Create Shift"
-                            BackgroundColor="#2563EB"
+                            BackgroundColor="#16A34A"
                             TextColor="White"
-                            Clicked="OnCreateShiftClicked" />
+                            CornerRadius="4"
+                            Clicked="OnCreateShiftClicked" />   
                     </Grid>
 
                 </VerticalStackLayout>

@@ -51,20 +51,15 @@ public partial class ScheduleView : ContentView
 
     private async Task<EmployeeModel?> FindBestEmployeeAsync(string role, DateTime shiftDate)
     {
+        // Call the updated service method that filters for Employees only
         var employees = await _databaseService.GetEmployeesAsync();
-        string dayName = shiftDate.DayOfWeek.ToString();
 
-        var qualifiedEmployees = employees
-            .Where(e =>
-                e.Skills.Contains(role, StringComparison.OrdinalIgnoreCase) &&
-                e.Availability.Contains(dayName, StringComparison.OrdinalIgnoreCase))
-            .ToList();
-
-        if (qualifiedEmployees.Count == 0)
+        if (employees == null || !employees.Any())
             return null;
 
+        // Pick a random employee from the list
         Random random = new();
-        return qualifiedEmployees[random.Next(qualifiedEmployees.Count)];
+        return employees[random.Next(employees.Count)];
     }
 
     private async void RenderWeek()
@@ -214,29 +209,45 @@ public partial class ScheduleView : ContentView
 
     private async void OnAutoAssignClicked(object sender, EventArgs e)
     {
-        if (ShiftDatePicker.Date.Date < DateTime.Today)
+        // SCENARIO 1: You have clicked an existing shift on the schedule (ShiftDetailsCard is visible)
+        if (_selectedShift != null && ShiftDetailsCard.IsVisible)
         {
-            await ShowAlert("Invalid Date", "Managers cannot auto-assign shifts for past days.");
-            ShiftDatePicker.Date = DateTime.Today;
+            var employee = await FindBestEmployeeAsync(_selectedShift.Role, _selectedShift.Date);
+
+            if (employee != null)
+            {
+                // 1. Keep the "Name | Email" format for the DATABASE only
+                // This ensures your LoadAssignedUserAsync logic can still find the user by email
+                _selectedShift.Employee = $"{employee.Name} | {employee.Email}";
+
+                // 2. Save the change to the SQLite database
+                await _databaseService.UpdateShiftAsync(_selectedShift);
+
+                // 3. Refresh the UI
+                RenderWeek();
+
+                // This triggers your updated LoadAssignedUserAsync logic 
+                // which splits the name and email into separate labels.
+                ShowShiftDetails(_selectedShift);
+
+                await ShowAlert("Success", $"Automatically assigned {employee.Name}");
+            }
+            else
+            {
+                await ShowAlert("No Employees", "No users with the 'Employee' role were found in the database.");
+            }
             return;
         }
-
-        string role = RolePicker.SelectedItem?.ToString() ?? "Cashier";
-        DateTime shiftDate = ShiftDatePicker.Date;
-
-        var employee = await FindBestEmployeeAsync(role, shiftDate);
-
-        if (employee == null)
+        // SCENARIO 2: You are using the "Add New Shift" popup
+        if (AddShiftOverlay.IsVisible)
         {
-            await ShowAlert("No Match Found", $"No available employee found for {role}.");
-            return;
+            var employee = await FindBestEmployeeAsync("any", DateTime.Today);
+            if (employee != null)
+            {
+                EmployeePicker.SelectedItem = $"{employee.Name} | {employee.Email}";
+            }
         }
-
-        EmployeePicker.SelectedItem =
-    $"{employee.Name} | {employee.Email}";
-        await ShowAlert("Auto Assign Complete", $"{employee.Name} assigned automatically.");
     }
-
     private async void OnCreateShiftClicked(object sender, EventArgs e)
     {
         if (ShiftDatePicker.Date.Date < DateTime.Today)
@@ -281,32 +292,39 @@ public partial class ScheduleView : ContentView
 
     private async void OnConfirmCreateClicked(object sender, EventArgs e)
     {
-        if (_pendingShift == null)
-            return;
+        if (_pendingShift == null) return;
 
-        if (_pendingShift.Date.Date < DateTime.Today)
+        try
         {
-            await ShowAlert("Invalid Date", "Managers cannot create shifts for past days.");
+            // 1. Save to DB and get the ID
+            int newId = await _databaseService.AddShiftAsync(_pendingShift);
+            _pendingShift.Id = newId;
+
+            // 2. IMPORTANT: Update the selected shift before clearing the pending one
+            _selectedShift = _pendingShift;
+
+            // 3. Clear UI overlays
             ConfirmOverlay.IsVisible = false;
-            _pendingShift = null;
-            return;
+
+            // 4. Refresh the grid
+            RenderWeek();
+
+            // 5. Only show details if we successfully set the selected shift
+            if (_selectedShift != null)
+            {
+                ShowShiftDetails(_selectedShift);
+            }
         }
-
-
-        int newId = await _databaseService.AddShiftAsync(_pendingShift);
-
-        LoadManagerNotificationBadge();
-
-        _pendingShift.Id = newId; // ✅ FIX
-        _pendingShift = null;
-        _selectedShift = _pendingShift;
-
-        ConfirmOverlay.IsVisible = false;
-
-        RenderWeek();
-        ShowShiftDetails(_selectedShift);
-
-        _pendingShift = null;
+        catch (Exception ex)
+        {
+            // The warning CS0168 in your screenshot says 'ex' is unused. 
+            // Let's use it here to see what's actually failing!
+            await ShowAlert("Error", $"Failed to create shift: {ex.Message}");
+        }
+        finally
+        {
+            _pendingShift = null; // Clear this last
+        }
     }
 
     private void AddShiftCard(ShiftModel shift)
@@ -405,53 +423,56 @@ public partial class ScheduleView : ContentView
         await LoadShiftTasksAsync(shift);
     }
 
-    private async Task LoadAssignedUserAsync(string employeeName)
+    private async Task LoadAssignedUserAsync(string employeeData)
     {
+        // Reset UI states
         DetailsProfileImage.Source = null;
         DetailsProfileImage.IsVisible = false;
         DetailsProfileFallbackLabel.IsVisible = true;
 
-        if (string.IsNullOrWhiteSpace(employeeName) || employeeName == "-- Unassigned --")
+        if (string.IsNullOrWhiteSpace(employeeData) || employeeData == "-- Unassigned --")
         {
             DetailsEmployeeLabel.Text = "Unassigned";
             DetailsEmployeeEmailLabel.Text = "No email found";
             return;
         }
 
-        var users = await _databaseService.GetUsersAsync();
+        string searchEmail = employeeData;
+        string displayName = employeeData;
 
-        var user = users.FirstOrDefault(u =>
+        // 1. SPLIT THE DATA: If it contains the Pipe |, separate Name and Email
+        if (employeeData.Contains('|'))
         {
-            string fullName = $"{u.FirstName} {u.LastName}".Trim();
-
-            return fullName.Equals(employeeName, StringComparison.OrdinalIgnoreCase) ||
-                   u.FirstName.Equals(employeeName, StringComparison.OrdinalIgnoreCase) ||
-                   u.Email.Equals(employeeName, StringComparison.OrdinalIgnoreCase);
-        });
-
-        if (user == null)
-        {
-            DetailsEmployeeLabel.Text = employeeName;
-            DetailsEmployeeEmailLabel.Text = "No email found";
-            return;
+            var parts = employeeData.Split('|');
+            displayName = parts[0].Trim(); // Just the Name
+            searchEmail = parts[1].Trim(); // Just the Email
         }
 
-        string displayName = $"{user.FirstName} {user.LastName}".Trim();
+        // 2. FIND THE USER: Use the extracted email to get the full profile (and image)
+        var users = await _databaseService.GetUsersAsync();
+        var user = users.FirstOrDefault(u => u.Email.Equals(searchEmail, StringComparison.OrdinalIgnoreCase));
 
-        DetailsEmployeeLabel.Text = string.IsNullOrWhiteSpace(displayName)
-            ? user.Email
-            : displayName;
-
-        DetailsEmployeeEmailLabel.Text = user.Email;
-
-        if (user.ProfileImageBytes != null && user.ProfileImageBytes.Length > 0)
+        if (user != null)
         {
-            DetailsProfileImage.Source = ImageSource.FromStream(() => new MemoryStream(user.ProfileImageBytes));
-            DetailsProfileImage.IsVisible = true;
-            DetailsProfileFallbackLabel.IsVisible = false;
+            // 3. SET THE LABELS: Top is Name, Bottom is Email
+            DetailsEmployeeLabel.Text = $"{user.FirstName} {user.LastName}".Trim();
+            DetailsEmployeeEmailLabel.Text = user.Email;
+
+            // Handle Profile Image
+            if (user.ProfileImageBytes != null && user.ProfileImageBytes.Length > 0)
+            {
+                DetailsProfileImage.Source = ImageSource.FromStream(() => new MemoryStream(user.ProfileImageBytes));
+                DetailsProfileImage.IsVisible = true;
+                DetailsProfileFallbackLabel.IsVisible = false;
+            }
+        }
+        else
+        {
+            // Fallback: if user isn't in DB, use the parsed data from the string
+            DetailsEmployeeLabel.Text = displayName;
+            DetailsEmployeeEmailLabel.Text = searchEmail.Contains("@") ? searchEmail : "No email found";
         }
     }
-
     private void OnAddTaskClicked(object sender, EventArgs e)
     {
         if (_selectedShift == null)
